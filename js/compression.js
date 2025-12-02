@@ -33,12 +33,9 @@ const Compression = (function() {
             if (i < data.length && data[i] === current && count < 999) {
                 count++;
             } else {
-                // Use RLE only if it saves space (run of 3 or more)
-                if (count >= 3) {
-                    compressed += `${count}${current}`;
-                } else {
-                    compressed += current.repeat(count);
-                }
+                // Always use COUNT+CHAR format for consistent parsing
+                // This prevents ambiguity with digit characters (0-9)
+                compressed += `${count}${current}`;
 
                 if (i < data.length) {
                     current = data[i];
