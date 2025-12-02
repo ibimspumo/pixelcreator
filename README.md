@@ -1,15 +1,15 @@
-# PixelCreator Pro 🎨
+# Inline.px 🎨
 
-**The ultimate pixel art editor designed for ultra-compact storage and seamless game integration.**
+**Ultra-compact pixel art with on-the-fly PNG generation.**
 
-PixelCreator Pro is a professional browser-based pixel art editor that generates incredibly small file sizes using a custom Base64 encoding system. Perfect for game developers who need to store sprites, icons, and textures in minimal space.
+Inline.px is a professional browser-based pixel art editor that generates incredibly small file sizes using a custom Base64 encoding system. It includes a custom HTML element and PNG generation server for seamless integration anywhere. Perfect for game developers who need to store sprites, icons, and textures in minimal space.
 
 ---
 
-## ✨ Why PixelCreator Pro?
+## ✨ Why Inline.px?
 
 ### 🎯 Ultra-Compact Storage
-Traditional image formats are bloated. PixelCreator Pro uses a revolutionary **Base64 encoding system** that produces tiny text strings:
+Traditional image formats are bloated. Inline.px uses a revolutionary **Base64 encoding system** that produces tiny text strings:
 
 - **16×16 sprite**: Only **260 characters** (~260 bytes)
 - **32×32 icon**: Only **1,030 characters** (~1 KB)
@@ -91,6 +91,60 @@ This can reduce file size by **50-80%** for sprites with large solid areas! The 
 - **Characters `1-9, A-Z, a-z, +, /`**: 63 colors
 - Each character = 1 pixel
 - Total palette: 64 colors (6-bit color depth)
+
+---
+
+## 🚀 Easy Integration - Two Methods
+
+### Method 1: Custom HTML Element (Recommended)
+
+The easiest way! Just include one script and use the `<inline-px>` element:
+
+```html
+<!-- Include the script -->
+<script src="inline-px.js"></script>
+
+<!-- Use the custom element -->
+<inline-px
+    data="16x16:0000000000000000003BB00BB3000000B11111111B..."
+    scale="8"
+    alt="Heart sprite"
+></inline-px>
+```
+
+**Features:**
+- ✓ No server required
+- ✓ Automatic RLE compression support
+- ✓ Crisp pixel rendering
+- ✓ Shadow DOM isolation
+- ✓ Works on static sites
+
+### Method 2: PNG Generation Server
+
+Run the Node.js server for on-the-fly PNG generation via URL:
+
+```bash
+npm install
+npm start
+```
+
+Then use standard `<img>` tags:
+
+```html
+<img src="http://localhost:3000/png?data=16x16:000...&scale=8" alt="Sprite" />
+```
+
+**Features:**
+- ✓ Works with standard `<img>` tags
+- ✓ Server-side rendering
+- ✓ Cacheable images
+- ✓ SEO friendly
+- ✓ SVG fallback option
+
+**API Endpoints:**
+- `GET /png?data=WxH:DATA&scale=4` - Generate PNG
+- `GET /png?data=WxH:DATA&format=svg` - Generate SVG
+- `GET /health` - Health check
 
 ---
 

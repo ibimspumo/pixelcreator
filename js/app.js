@@ -16,7 +16,7 @@ const App = (function() {
      * Initialize the application
      */
     function init() {
-        console.log('PixelCreator Pro initializing...');
+        console.log('Inline.px initializing...');
 
         // Initialize dialog system first
         Dialogs.init();
@@ -42,7 +42,7 @@ const App = (function() {
         updateLiveExportPreview();
         updateSizePresetHighlight();
 
-        console.log('PixelCreator Pro ready!');
+        console.log('Inline.px ready!');
     }
 
     /**

@@ -166,7 +166,7 @@ const TabManager = (function() {
         }
 
         // Update document title
-        document.title = `${tab.name} - PixelCreator Pro`;
+        document.title = `${tab.name} - Inline.px`;
 
         console.log('Switched to tab:', tab.name);
     }
@@ -279,7 +279,7 @@ const TabManager = (function() {
             updateTabUI(tab);
 
             if (currentTabId === tabId) {
-                document.title = `${tab.name} - PixelCreator Pro`;
+                document.title = `${tab.name} - Inline.px`;
             }
         }
     }
@@ -357,7 +357,7 @@ const TabManager = (function() {
         if (tab) {
             tab.name = name;
             updateTabUI(tab);
-            document.title = `${tab.name} - PixelCreator Pro`;
+            document.title = `${tab.name} - Inline.px`;
         }
     }
 
