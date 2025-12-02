@@ -37,13 +37,16 @@ Compare this to PNG files which are typically **5-10× larger**!
 
 ### Advanced Features
 - **Multi-Tab Workspace**: Work on multiple sprites simultaneously (Photoshop-style)
-- **Autosave System**: Never lose your work with automatic saving
-- **Zoom & Pan**: 10%-1000% zoom with smooth panning
+- **Autosave System**: Never lose your work with automatic saving (every 30s)
+- **Zoom & Pan**: 10%-1000% zoom with smooth panning and hand tool
+- **RLE Compression**: Optional compression with savings preview (50-80% smaller)
+- **PNG Export**: Export as PNG with multiple scale options (1×, 2×, 4×, 8×)
 - **Real-Time Export**: See your export string update as you draw
 - **LocalStorage Integration**: Save/load projects in your browser
 
 ### Modern Interface
 - **Dark Theme**: Professional design easy on the eyes
+- **Material Symbols Icons**: Modern, crisp icon system from Google
 - **Keyboard Shortcuts**: Fast workflow with hotkeys for every tool
 - **Responsive Design**: Works on desktop and mobile
 - **Custom Dialogs**: Beautiful, consistent UI (no browser popups)
@@ -67,6 +70,21 @@ WxH:BASE64DATA
 
 This represents a full 16×16 sprite in just **260 characters**!
 
+### Optional RLE Compression
+
+For sprites with repeated pixels, you can enable RLE (Run-Length Encoding) compression:
+
+```
+WxH:RLE:COMPRESSED_DATA
+```
+
+**Example:** Same heart with compression
+```
+16x16:RLE:16(0)3B2(0)B3(0)B11(1)B9(1)B11(1)B10(1)B9(1)B...
+```
+
+This can reduce file size by **50-80%** for sprites with large solid areas! The editor shows you the exact savings and a before/after preview.
+
 ### Encoding System
 
 - **Character `0`**: Transparent pixel
@@ -83,13 +101,52 @@ This represents a full 16×16 sprite in just **260 characters**!
 ```javascript
 /**
  * Parse and render PixelCreator Pro format
+ * Supports both standard and RLE-compressed formats
  */
 function parsePixelArt(dataString) {
-    // Split format: "WxH:DATA"
-    const [dimensions, data] = dataString.split(':');
-    const [width, height] = dimensions.split('x').map(Number);
+    const parts = dataString.split(':');
+    const [width, height] = parts[0].split('x').map(Number);
+
+    let data;
+    if (parts[1] === 'RLE') {
+        // Decompress RLE format
+        data = decompressRLE(parts[2]);
+    } else {
+        // Standard format
+        data = parts[1];
+    }
 
     return { width, height, data };
+}
+
+/**
+ * Decompress RLE format
+ * Format: "16(0)" means 16 repetitions of character '0'
+ */
+function decompressRLE(compressed) {
+    let decompressed = '';
+    let i = 0;
+
+    while (i < compressed.length) {
+        // Check if we have a number (run length)
+        if (/\d/.test(compressed[i])) {
+            let numStr = '';
+            while (i < compressed.length && /\d/.test(compressed[i])) {
+                numStr += compressed[i];
+                i++;
+            }
+            const count = parseInt(numStr);
+            const char = compressed[i];
+            decompressed += char.repeat(count);
+            i++;
+        } else {
+            // Single character
+            decompressed += compressed[i];
+            i++;
+        }
+    }
+
+    return decompressed;
 }
 
 /**
@@ -468,11 +525,15 @@ const PALETTE = [
 
 ### Quick Start
 
-1. **Select a tool** - Click a tool or use keyboard shortcuts
-2. **Choose a color** - Click on the color palette
+1. **Select a tool** - Click a tool or use keyboard shortcuts (B, P, E, L, etc.)
+2. **Choose a color** - Click on the color palette (64 colors available)
 3. **Draw** - Click and drag on the canvas
-4. **Export** - Click "Export" to get your compact string
-5. **Copy or Download** - Choose to copy the string or download as .txt file
+4. **Export** - Click "Export" to choose your export format
+5. **Choose Format**:
+   - **Copy String** - Copy the text string to clipboard
+   - **Download TXT** - Save as a text file
+   - **Download PNG** - Export as a pixel-perfect PNG image (1×, 2×, 4×, 8× scale)
+6. **Optional Compression** - Enable RLE compression to reduce file size by 50-80%
 
 ### Tips for Smallest File Sizes
 
@@ -480,6 +541,7 @@ const PALETTE = [
 - Stick to a **limited color palette** - fewer unique colors = better compression potential
 - Use **smaller dimensions** when possible (8×8, 16×16, 32×32)
 - Consider creating **tile sets** instead of large images
+- Enable **RLE compression** for sprites with repeated colors (the editor will show you if it helps)
 
 ---
 
@@ -504,23 +566,28 @@ const PALETTE = [
 ## 🏗️ Architecture
 
 ### Modular JavaScript
-- `dialogs.js` - Custom dialog system
+- `dialogs.js` - Custom dialog system with Material Symbols
+- `compression.js` - RLE compression/decompression
+- `pngExport.js` - PNG export functionality
 - `colorPalette.js` - 64-color palette management
 - `tools.js` - 11 professional drawing tools
 - `canvas.js` - Canvas rendering and pixel data
 - `fileManager.js` - Save/Load/Export operations
 - `tabManager.js` - Multi-document interface
-- `autosave.js` - Automatic saving system
+- `autosave.js` - Automatic saving system (30s intervals)
 - `viewport.js` - Zoom and pan functionality
 - `app.js` - Main application controller
 
 ### Modular CSS
 - `variables.css` - Design system tokens
+- `icons.css` - Material Symbols icon styling
 - `layout.css` - Photoshop-style 3-panel layout
 - `toolbox.css` - Tool sidebar styling
 - `properties.css` - Properties panel styling
 - `dialogs.css` - Custom dialog styling
 - `tabs.css` - Multi-tab system styling
+- `autosave.css` - Autosave indicator styling
+- `zoom.css` - Zoom controls styling
 - And more...
 
 ---
@@ -582,7 +649,9 @@ Contributions, issues, and feature requests are welcome!
 - **Color quantization**: Automatically reduce colors
 - **Sprite sheet generator**: Combine multiple sprites
 - **NPM library**: Official parsing/rendering library
-- **Compression**: Optional LZ-based compression for even smaller sizes
+- **Advanced compression**: LZ-based compression for even smaller sizes
+- **Collaborative editing**: Real-time multi-user editing
+- **Cloud sync**: Sync projects across devices
 
 ---
 

@@ -37,7 +37,7 @@ const Tools = (function() {
     const TOOL_INFO = {
         [TOOL_TYPES.BRUSH]: {
             name: 'Brush',
-            icon: '🖌️',
+            icon: 'brush',
             shortcut: 'B',
             cursor: 'crosshair',
             hasSizeOption: true,
@@ -45,7 +45,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.PENCIL]: {
             name: 'Pencil',
-            icon: '✏️',
+            icon: 'edit',
             shortcut: 'P',
             cursor: 'crosshair',
             hasSizeOption: false,
@@ -53,7 +53,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.ERASER]: {
             name: 'Eraser',
-            icon: '🧹',
+            icon: 'ink_eraser',
             shortcut: 'E',
             cursor: 'crosshair',
             hasSizeOption: true,
@@ -61,7 +61,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.LINE]: {
             name: 'Line',
-            icon: '📏',
+            icon: 'show_chart',
             shortcut: 'L',
             cursor: 'crosshair',
             hasSizeOption: true,
@@ -69,7 +69,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.RECTANGLE]: {
             name: 'Rectangle',
-            icon: '⬜',
+            icon: 'rectangle',
             shortcut: 'R',
             cursor: 'crosshair',
             hasSizeOption: false,
@@ -77,7 +77,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.ELLIPSE]: {
             name: 'Ellipse',
-            icon: '⭕',
+            icon: 'circle',
             shortcut: 'O',
             cursor: 'crosshair',
             hasSizeOption: false,
@@ -85,7 +85,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.FILL]: {
             name: 'Fill',
-            icon: '🪣',
+            icon: 'format_color_fill',
             shortcut: 'F',
             cursor: 'crosshair',
             hasSizeOption: false,
@@ -93,7 +93,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.SELECT]: {
             name: 'Select',
-            icon: '🔲',
+            icon: 'select_all',
             shortcut: 'M',
             cursor: 'crosshair',
             hasSizeOption: false,
@@ -101,7 +101,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.MAGIC_WAND]: {
             name: 'Magic Wand',
-            icon: '🪄',
+            icon: 'auto_fix_high',
             shortcut: 'W',
             cursor: 'crosshair',
             hasSizeOption: false,
@@ -109,7 +109,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.MOVE]: {
             name: 'Move',
-            icon: '✋',
+            icon: 'open_with',
             shortcut: 'V',
             cursor: 'move',
             hasSizeOption: false,
@@ -117,7 +117,7 @@ const Tools = (function() {
         },
         [TOOL_TYPES.HAND]: {
             name: 'Hand',
-            icon: '👋',
+            icon: 'pan_tool',
             shortcut: 'H',
             cursor: 'grab',
             hasSizeOption: false,

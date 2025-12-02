@@ -54,10 +54,10 @@ const Dialogs = (function() {
     function alert(title, message, type = 'info') {
         return new Promise((resolve) => {
             const iconMap = {
-                info: 'ℹ️',
-                success: '✓',
-                warning: '⚠️',
-                error: '✕'
+                info: 'info',
+                success: 'check_circle',
+                warning: 'warning',
+                error: 'error'
             };
 
             const dialog = createDialogElement({
@@ -96,10 +96,10 @@ const Dialogs = (function() {
             const dangerous = options.dangerous || false;
 
             const iconMap = {
-                info: 'ℹ️',
-                success: '✓',
-                warning: '⚠️',
-                error: '✕'
+                info: 'info',
+                success: 'check_circle',
+                warning: 'warning',
+                error: 'error'
             };
 
             const dialog = createDialogElement({
@@ -147,7 +147,7 @@ const Dialogs = (function() {
             const dialog = createDialogElement({
                 title: title,
                 message: message,
-                icon: '✏️',
+                icon: 'edit_note',
                 type: 'info',
                 input: {
                     type: inputType,
@@ -212,7 +212,7 @@ const Dialogs = (function() {
             const dialog = createDialogElement({
                 title: 'Export Pixel Art',
                 message: 'Choose how you want to export your pixel art:',
-                icon: '⬇️',
+                icon: 'download',
                 type: 'info',
                 customContent: `
                     <div class="export-options">
@@ -263,17 +263,17 @@ const Dialogs = (function() {
                             <strong>Export as:</strong>
                             <div class="export-format-buttons">
                                 <button class="export-format-btn" data-format="copy-string">
-                                    <span class="export-format-icon">📋</span>
+                                    <span class="material-symbols-outlined export-format-icon">content_copy</span>
                                     <span class="export-format-label">Copy String</span>
                                     <span class="export-format-desc">Copy to clipboard</span>
                                 </button>
                                 <button class="export-format-btn" data-format="download-txt">
-                                    <span class="export-format-icon">📄</span>
+                                    <span class="material-symbols-outlined export-format-icon">description</span>
                                     <span class="export-format-label">Download TXT</span>
                                     <span class="export-format-desc">Save as text file</span>
                                 </button>
                                 <button class="export-format-btn" data-format="download-png">
-                                    <span class="export-format-icon">🖼️</span>
+                                    <span class="material-symbols-outlined export-format-icon">image</span>
                                     <span class="export-format-label">Download PNG</span>
                                     <span class="export-format-desc">Save as image</span>
                                 </button>
@@ -363,7 +363,7 @@ const Dialogs = (function() {
         const header = document.createElement('div');
         header.className = 'dialog-header';
         header.innerHTML = `
-            <div class="dialog-icon">${config.icon}</div>
+            <span class="material-symbols-outlined dialog-icon">${config.icon}</span>
             <h2 class="dialog-title">${escapeHtml(config.title)}</h2>
         `;
         dialog.appendChild(header);

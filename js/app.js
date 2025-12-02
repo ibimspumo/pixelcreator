@@ -81,7 +81,7 @@ const App = (function() {
             }
 
             btn.innerHTML = `
-                <span class="tool-icon">${info.icon}</span>
+                <span class="material-symbols-outlined tool-icon">${info.icon}</span>
                 <span class="tool-label">${info.name}</span>
                 <span class="tool-shortcut">${info.shortcut}</span>
             `;
@@ -537,13 +537,14 @@ const App = (function() {
      */
     function showCopyFeedback() {
         const btn = document.getElementById('copyLiveStringBtn');
-        const originalText = btn.textContent;
+        const icon = btn.querySelector('.material-symbols-outlined');
+        const originalIcon = icon.textContent;
 
-        btn.textContent = '✓';
+        icon.textContent = 'check';
         btn.style.background = 'var(--success-color)';
 
         setTimeout(() => {
-            btn.textContent = originalText;
+            icon.textContent = originalIcon;
             btn.style.background = '';
         }, 1000);
     }

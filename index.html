@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>PixelCreator Pro - Professional Pixel Art Editor</title>
+
+    <!-- Material Symbols Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,26 +28,26 @@
             <div class="menu-bar">
                 <div class="menu-section">
                     <button id="newBtn" class="menu-btn" title="New (Ctrl+N)">
-                        <span>📄</span> New
+                        <span class="material-symbols-outlined">description</span> New
                     </button>
                     <button id="saveBtn" class="menu-btn" title="Save (Ctrl+S)">
-                        <span>💾</span> Save
+                        <span class="material-symbols-outlined">save</span> Save
                     </button>
                     <button id="loadBtn" class="menu-btn" title="Load (Ctrl+O)">
-                        <span>📂</span> Load
+                        <span class="material-symbols-outlined">folder_open</span> Load
                     </button>
                 </div>
                 <div class="menu-section">
                     <button id="exportFileBtn" class="menu-btn" title="Export">
-                        <span>⬇️</span> Export
+                        <span class="material-symbols-outlined">download</span> Export
                     </button>
                     <button id="importStringBtn" class="menu-btn" title="Import">
-                        <span>⬆️</span> Import
+                        <span class="material-symbols-outlined">upload</span> Import
                     </button>
                 </div>
                 <div class="menu-section">
                     <button id="clearBtn" class="menu-btn menu-btn-danger" title="Clear">
-                        <span>🗑️</span> Clear
+                        <span class="material-symbols-outlined">delete</span> Clear
                     </button>
                 </div>
             </div>
@@ -98,7 +102,9 @@
             <div class="export-panel">
                 <div class="export-panel-header">
                     <h3>Export String</h3>
-                    <button id="copyLiveStringBtn" class="icon-btn" title="Copy">📋</button>
+                    <button id="copyLiveStringBtn" class="icon-btn" title="Copy">
+                        <span class="material-symbols-outlined">content_copy</span>
+                    </button>
                 </div>
                 <div class="export-content">
                     <code id="liveExportString" class="export-code">16x16:0000...</code>

@@ -6,6 +6,7 @@
 /* Import all CSS modules in correct order */
 @import url('css/variables.css');
 @import url('css/reset.css');
+@import url('css/icons.css');
 @import url('css/layout.css');
 @import url('css/toolbox.css');
 @import url('css/properties.css');
