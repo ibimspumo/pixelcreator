@@ -8,6 +8,14 @@
  * - ERROR: Errors
  *
  * @module Logger
+ *
+ * @typedef {import('../types.js').LogLevel} LogLevel
+ *
+ * @typedef {Object} LogEntry
+ * @property {string} level - Log level
+ * @property {string} message - Log message
+ * @property {number} timestamp - Timestamp
+ * @property {Array<*>} args - Additional arguments
  */
 
 const LOG_LEVELS = {

@@ -8,12 +8,21 @@
  * - Wildcard events
  *
  * @module EventBus
+ *
+ * @typedef {Function} EventCallback
+ * @typedef {Function} UnsubscribeFunction
  */
 
 import logger from './Logger.js';
 
 const listeners = {};
 
+/**
+ * Subscribe to an event
+ * @param {string} event - Event name
+ * @param {EventCallback} callback - Callback function
+ * @returns {UnsubscribeFunction} Unsubscribe function
+ */
 function on(event, callback) {
     if (!listeners[event]) {
         listeners[event] = [];

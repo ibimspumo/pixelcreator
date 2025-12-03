@@ -8,6 +8,9 @@
  * - SelectionOverlay: Selection visualization
  *
  * @module PixelCanvas
+ *
+ * @typedef {import('../types.js').DrawingContext} DrawingContext
+ * @typedef {import('../types.js').SelectionBounds} SelectionBounds
  */
 
 import logger from '../core/Logger.js';
