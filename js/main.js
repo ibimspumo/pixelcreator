@@ -620,6 +620,7 @@ function loadFileFromWelcomeScreen(file) {
 }
 
 function handleNew() {
+    hideWelcomeScreen();
     TabManager.createNewTab();
 }
 
@@ -637,6 +638,7 @@ async function handleSave() {
 function handleLoad() {
     FileManager.showLoadDialog((file) => {
         if (PixelCanvas.importFromString(file.data)) {
+            hideWelcomeScreen();
             TabManager.setCurrentTabName(file.name);
             FileManager.setCurrentFileName(file.name);
             TabManager.markCurrentTabClean();
