@@ -4,34 +4,38 @@
  */
 
 :root {
-    /* ===== Primary Colors ===== */
-    --primary-color: #4CAF50;
-    --primary-hover: #45a049;
-    --primary-active: #3d8b40;
+    /* ===== Primary Colors (Inline.px Branding - Cyan/Blue) ===== */
+    --primary-color: #0088cc;
+    --primary-hover: #00a0ee;
+    --primary-active: #00b8ff;
 
-    --secondary-color: #2196F3;
-    --secondary-hover: #1976D2;
+    --secondary-color: #0066ff;
+    --secondary-hover: #0052cc;
 
-    --danger-color: #f44336;
-    --danger-hover: #da190b;
+    --accent-cyan: #00d9ff;
+    --accent-cyan-bright: #00ffff;
+    --accent-blue: #0052cc;
 
-    --success-color: #4CAF50;
-    --warning-color: #FFC107;
-    --info-color: #2196F3;
+    --danger-color: #ff4466;
+    --danger-hover: #ee3355;
+
+    --success-color: #00d9ff;
+    --warning-color: #ffaa00;
+    --info-color: #0088cc;
 
     /* ===== Background Colors ===== */
-    --app-bg: #0d0d0d;
-    --workspace-bg: #1a1a1a;
-    --panel-bg: #252525;
-    --surface-bg: #2a2a2a;
-    --elevated-bg: #333333;
-    --hover-bg: #3a3a3a;
+    --app-bg: #0a0e1a;
+    --workspace-bg: #121829;
+    --panel-bg: #1a2035;
+    --surface-bg: #202840;
+    --elevated-bg: #283050;
+    --hover-bg: #303860;
 
     /* ===== Border Colors ===== */
-    --border-color: #404040;
-    --border-light: #4a4a4a;
-    --border-dark: #2a2a2a;
-    --border-accent: #555555;
+    --border-color: #2a3555;
+    --border-light: #354066;
+    --border-dark: #1a2035;
+    --border-accent: var(--accent-cyan);
 
     /* ===== Text Colors ===== */
     --text-primary: #ffffff;
@@ -44,6 +48,8 @@
     --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.6);
     --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.7);
     --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.8);
+    --shadow-cyan: 0 0 20px rgba(0, 217, 255, 0.3);
+    --shadow-blue: 0 0 20px rgba(0, 102, 255, 0.3);
 
     /* ===== Spacing System ===== */
     --spacing-xs: 4px;
