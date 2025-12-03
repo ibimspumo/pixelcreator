@@ -171,7 +171,10 @@ function importFromString(str) {
     const result = PixelData.importFromString(str);
     if (result.success) {
         const dims = PixelData.getDimensions();
-        CanvasRenderer.updateCanvasSize(dims.width, dims.height);
+
+        // Preserve current pixelSize to maintain zoom level
+        const currentPixelSize = CanvasRenderer.getPixelSize();
+        CanvasRenderer.updateCanvasSize(dims.width, dims.height, currentPixelSize);
 
         if (SelectionOverlay) {
             SelectionOverlay.updateSize();
