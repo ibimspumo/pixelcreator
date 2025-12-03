@@ -203,29 +203,46 @@ async function closeTab(tabId) {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
 
-    // Prevent closing last tab
+    // Handle closing last tab - return to welcome screen
     if (tabs.length === 1) {
-        const confirmed = await Dialogs.confirm(
-            'Close Document',
-            'Close this document and create a new one?',
-            {
-                confirmText: 'Close & New',
-                cancelText: 'Cancel',
-                type: 'info'
-            }
-        );
+        // Only confirm if there are unsaved changes
+        if (tab.isDirty) {
+            const confirmed = await Dialogs.confirm(
+                'Unsaved Changes',
+                `"${tab.name}" has unsaved changes. Close anyway?`,
+                {
+                    confirmText: 'Close',
+                    cancelText: 'Cancel',
+                    type: 'warning',
+                    dangerous: true
+                }
+            );
 
-        if (confirmed) {
-            // Clear and reset
-            tab.data = generateEmptyData(16, 16);
-            tab.name = 'Untitled-1';
-            tab.isDirty = false;
-            updateTabUI(tab);
-            switchToTab(tab.id);
-            if (PixelCanvas) {
-                PixelCanvas.importFromString(tab.data);
+            if (!confirmed) {
+                return;
             }
         }
+
+        // Remove the last tab and show welcome screen
+        tabs = [];
+        currentTabId = null;
+        const tabElement = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
+        if (tabElement) {
+            tabElement.remove();
+        }
+
+        // Show welcome screen
+        if (typeof showWelcomeScreen === 'function') {
+            showWelcomeScreen();
+        } else {
+            // Fallback if function not available (call via window)
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const canvasContainer = document.getElementById('canvasContainer');
+            if (welcomeScreen) welcomeScreen.style.display = 'flex';
+            if (canvasContainer) canvasContainer.style.display = 'none';
+        }
+
+        logger.info('Last tab closed, returning to welcome screen');
         return;
     }
 

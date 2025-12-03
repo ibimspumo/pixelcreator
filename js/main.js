@@ -393,6 +393,9 @@ function showWelcomeScreen() {
     document.getElementById('canvasContainer').style.display = 'none';
 }
 
+// Make showWelcomeScreen globally accessible for tabManager
+window.showWelcomeScreen = showWelcomeScreen;
+
 /**
  * Hide welcome screen and show canvas
  */
@@ -506,9 +509,13 @@ function createFileGridItem(file) {
         <div class="file-grid-preview">
             ${preview.outerHTML}
         </div>
-        <div class="file-grid-name">${file.name}</div>
-        <div class="file-grid-info">${dimensions}</div>
-        <div class="file-grid-date">${dateStr}</div>
+        <div class="file-grid-details">
+            <div class="file-grid-name">${file.name}</div>
+            <div class="file-grid-meta">
+                <span class="file-grid-info">${dimensions}</span>
+                <span class="file-grid-date">${dateStr}</span>
+            </div>
+        </div>
     `;
 
     return item;
@@ -550,10 +557,10 @@ function generateFilePreview(dataString) {
         data = decompressed;
     }
 
-    // Set canvas size (max 100x100 for preview)
-    const scale = Math.min(100 / width, 100 / height);
-    canvas.width = width * scale;
-    canvas.height = height * scale;
+    // Set canvas size (max 64x64 for preview)
+    const scale = Math.min(64 / width, 64 / height);
+    canvas.width = Math.floor(width * scale);
+    canvas.height = Math.floor(height * scale);
 
     // Draw pixels
     ctx.imageSmoothingEnabled = false;
