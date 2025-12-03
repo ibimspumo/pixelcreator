@@ -79,7 +79,7 @@ function createTabBar() {
  * @param {string|null} data - Optional pixel data
  * @returns {TabData} Created tab
  */
-function createNewTab(name = null, width = 16, height = 16, data = null) {
+function createNewTab(name = null, width = 8, height = 8, data = null) {
     tabCounter++;
     const tabId = `tab_${Date.now()}_${tabCounter}`;
     const tabName = name || `Untitled-${tabCounter}`;

@@ -48,8 +48,9 @@ function calculatePixelSize(width, height) {
         return constants?.canvas?.defaultPixelSize || 30;
     }
 
-    const maxWidth = Math.min(container.clientWidth - 40, 800);
-    const maxHeight = Math.min(window.innerHeight * 0.5, 800);
+    // Use available space in the canvas container
+    const maxWidth = container.clientWidth - 80;
+    const maxHeight = container.clientHeight - 80;
 
     const pixelSizeW = Math.floor(maxWidth / width);
     const pixelSizeH = Math.floor(maxHeight / height);
@@ -57,6 +58,7 @@ function calculatePixelSize(width, height) {
     const minSize = constants?.canvas?.minPixelSize || 8;
     const maxSize = constants?.canvas?.maxPixelSize || 50;
 
+    // Use the smaller of the two to fit both dimensions
     return Math.max(minSize, Math.min(pixelSizeW, pixelSizeH, maxSize));
 }
 
@@ -89,6 +91,9 @@ function render(pixelData) {
         logger.warn?.('No pixel data to render');
         return;
     }
+
+    // Ensure crisp pixel rendering
+    ctx.imageSmoothingEnabled = false;
 
     const height = pixelData.length;
     const width = pixelData[0].length;
