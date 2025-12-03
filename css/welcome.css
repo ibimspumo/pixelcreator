@@ -334,6 +334,7 @@
     overflow: hidden;
 }
 
+.file-grid-preview img,
 .file-grid-preview canvas {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;

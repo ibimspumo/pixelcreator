@@ -495,8 +495,9 @@ function createFileGridItem(file) {
     const item = document.createElement('div');
     item.className = 'file-grid-item';
 
-    // Generate preview canvas
-    const preview = generateFilePreview(file.data);
+    // Generate preview canvas and convert to image
+    const previewCanvas = generateFilePreview(file.data);
+    const previewDataURL = previewCanvas.toDataURL('image/png');
 
     // Format date
     const date = new Date(file.timestamp);
@@ -507,7 +508,7 @@ function createFileGridItem(file) {
 
     item.innerHTML = `
         <div class="file-grid-preview">
-            ${preview.outerHTML}
+            <img src="${previewDataURL}" alt="${file.name}" />
         </div>
         <div class="file-grid-details">
             <div class="file-grid-name">${file.name}</div>
@@ -530,53 +531,70 @@ function generateFilePreview(dataString) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Parse data string
-    let parsedData = dataString;
+    try {
+        // Parse data string
+        let parsedData = dataString;
 
-    // Check if compressed, decompress if needed
-    if (Compression && Compression.isCompressed(dataString)) {
-        parsedData = Compression.decompress(dataString);
-    }
+        // Check if compressed, decompress if needed
+        if (Compression && Compression.isCompressed(dataString)) {
+            parsedData = Compression.decompress(dataString);
+            logger.debug?.('Preview: Decompressed data');
+        }
 
-    const match = parsedData.match(/^(\d+)x(\d+):(.+)$/);
-    if (!match) {
-        // Fallback for invalid data
-        canvas.width = 64;
-        canvas.height = 64;
-        ctx.fillStyle = '#333';
-        ctx.fillRect(0, 0, 64, 64);
-        return canvas;
-    }
+        const match = parsedData.match(/^(\d+)x(\d+):(.+)$/);
+        if (!match) {
+            logger.warn?.('Preview: Invalid data format:', parsedData.substring(0, 50));
+            // Fallback for invalid data
+            canvas.width = 64;
+            canvas.height = 64;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, 0, 64, 64);
+            return canvas;
+        }
 
-    const width = parseInt(match[1]);
-    const height = parseInt(match[2]);
-    const data = match[3];
+        const width = parseInt(match[1]);
+        const height = parseInt(match[2]);
+        const data = match[3];
 
-    // Calculate scale to fit in 64x64
-    const scale = Math.min(64 / width, 64 / height);
-    canvas.width = Math.floor(width * scale);
-    canvas.height = Math.floor(height * scale);
+        logger.debug?.(`Preview: Rendering ${width}×${height}, data length: ${data.length}`);
 
-    // Draw pixels
-    ctx.imageSmoothingEnabled = false;
+        // Calculate scale to fit in 64x64
+        const scale = Math.min(64 / width, 64 / height);
+        canvas.width = Math.floor(width * scale);
+        canvas.height = Math.floor(height * scale);
 
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const index = y * width + x;
-            if (index < data.length) {
-                const char = data[index];
-                const colorIndex = ColorPalette.getIndexFromChar(char);
+        // Draw pixels
+        ctx.imageSmoothingEnabled = false;
 
-                // Skip transparent pixels (0)
-                if (colorIndex === 0) continue;
+        let pixelsDrawn = 0;
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const index = y * width + x;
+                if (index < data.length) {
+                    const char = data[index];
+                    const colorIndex = ColorPalette.getIndexFromChar(char);
 
-                const color = ColorPalette.getColor(colorIndex);
-                if (color) {
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x * scale, y * scale, scale, scale);
+                    // Skip transparent pixels (0)
+                    if (colorIndex === 0) continue;
+
+                    const color = ColorPalette.getColor(colorIndex);
+                    if (color) {
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x * scale, y * scale, scale, scale);
+                        pixelsDrawn++;
+                    }
                 }
             }
         }
+
+        logger.debug?.(`Preview: Drew ${pixelsDrawn} pixels`);
+
+    } catch (error) {
+        logger.error?.('Preview generation failed:', error);
+        canvas.width = 64;
+        canvas.height = 64;
+        ctx.fillStyle = '#f00';
+        ctx.fillRect(0, 0, 64, 64);
     }
 
     return canvas;
