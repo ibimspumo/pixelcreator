@@ -806,6 +806,410 @@ The editor features a **fully modular architecture**:
 
 ---
 
+## 🔧 Extending the Editor (Developer Guide)
+
+The modular architecture makes it easy to customize and extend the editor.
+
+### Adding a New Drawing Tool
+
+Create a new tool by extending `BaseTool`:
+
+```javascript
+// js/tools/implementations/SprayTool.js
+
+/**
+ * SprayTool - Spray paint effect
+ */
+class SprayTool extends BaseTool {
+    static CONFIG = {
+        id: 'spray',
+        name: 'Spray',
+        icon: 'blur_on',                    // Material Symbols icon
+        shortcut: 'S',                       // Keyboard shortcut
+        cursor: 'crosshair',
+        hasSizeOption: true,                 // Show brush size selector
+        hasShapeOption: false,               // Show fill/stroke selector
+        description: 'Spray paint with random distribution',
+        category: 'drawing'
+    };
+
+    static DEFAULT_OPTIONS = {
+        brushSize: 3,
+        density: 0.3  // Custom option: spray density
+    };
+
+    /**
+     * Called when user starts drawing
+     */
+    onDrawStart(x, y, pixelData, context) {
+        this.sprayAtPosition(x, y, pixelData, context);
+    }
+
+    /**
+     * Called while dragging
+     */
+    onDrawContinue(x, y, pixelData, context) {
+        this.sprayAtPosition(x, y, pixelData, context);
+    }
+
+    /**
+     * Called when drawing ends
+     */
+    onDrawEnd(x, y, pixelData, context) {
+        // Optional cleanup
+    }
+
+    /**
+     * Spray paint at position with random distribution
+     */
+    sprayAtPosition(centerX, centerY, pixelData, context) {
+        const size = this.options.brushSize || 3;
+        const density = this.options.density || 0.3;
+        const colorCode = this.options.colorCode || 1;
+
+        const radius = Math.floor(size / 2);
+        const pixelCount = Math.floor(size * size * density);
+
+        for (let i = 0; i < pixelCount; i++) {
+            // Random position within spray radius
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * radius;
+            const px = Math.round(centerX + Math.cos(angle) * distance);
+            const py = Math.round(centerY + Math.sin(angle) * distance);
+
+            // Set pixel if within bounds
+            if (py >= 0 && py < pixelData.length &&
+                px >= 0 && px < pixelData[0].length) {
+                pixelData[py][px] = colorCode;
+            }
+        }
+    }
+}
+
+// Auto-register with window export
+if (typeof window !== 'undefined') {
+    window.SprayTool = SprayTool;
+}
+```
+
+**Register the tool in `index.html`:**
+
+```html
+<!-- Add after other tool implementations -->
+<script src="js/tools/implementations/SprayTool.js"></script>
+```
+
+**Register the tool in `app.js`:**
+
+```javascript
+// In initializeTools() function, add to toolClasses array:
+const toolClasses = [
+    window.BrushTool,
+    window.PencilTool,
+    window.EraserTool,
+    window.LineTool,
+    window.RectangleTool,
+    window.EllipseTool,
+    window.FillTool,
+    window.SelectTool,
+    window.MagicWandTool,
+    window.MoveTool,
+    window.HandTool,
+    window.SprayTool  // Add your new tool
+];
+```
+
+That's it! Your tool will automatically appear in the toolbox with its icon and keyboard shortcut.
+
+### Customizing the Color Palette
+
+Edit `config/colors.js` to change colors:
+
+```javascript
+// config/colors.js
+const ColorConfig = {
+    base64Chars: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/",
+    palette: [
+        // Index 0 MUST be transparent
+        { index: 0, char: "0", color: "transparent", name: "Transparent", category: "special" },
+
+        // Customize any color (indices 1-63)
+        { index: 1, char: "1", color: "#000000", name: "Black", category: "basic" },
+        { index: 2, char: "2", color: "#FFFFFF", name: "White", category: "basic" },
+        { index: 3, char: "3", color: "#FF1744", name: "Hot Pink", category: "custom" },  // Changed!
+        { index: 4, char: "4", color: "#00E676", name: "Neon Green", category: "custom" }, // Changed!
+
+        // Add your custom colors...
+        { index: 5, char: "5", color: "#2979FF", name: "Electric Blue", category: "custom" },
+
+        // Keep remaining indices for the full 64-color palette
+        // ...
+    ]
+};
+
+if (typeof window !== 'undefined') {
+    window.ColorConfig = ColorConfig;
+}
+```
+
+**Important:**
+- Index `0` must always be transparent
+- Keep all 64 colors for full Base64 compatibility
+- Categories are for UI organization only
+- Changes take effect immediately on reload
+
+### Adding Custom Tool Options
+
+Example: Add a "Spray Density" slider to SprayTool:
+
+**1. Add to tool CONFIG:**
+
+```javascript
+class SprayTool extends BaseTool {
+    static CONFIG = {
+        // ... other config
+        customOptions: [
+            {
+                id: 'density',
+                type: 'slider',
+                label: 'Density',
+                min: 0.1,
+                max: 1.0,
+                step: 0.1,
+                default: 0.3
+            }
+        ]
+    };
+}
+```
+
+**2. Access in your tool:**
+
+```javascript
+onDrawStart(x, y, pixelData, context) {
+    const density = this.options.density || 0.3;
+    // Use density value...
+}
+```
+
+**3. Update UI (in `app.js` or create custom UI module):**
+
+```javascript
+// Example: Add density slider to info bar
+function setupToolOptions() {
+    const currentTool = window.ToolRegistry.getCurrentTool();
+
+    if (currentTool?.constructor.CONFIG.customOptions) {
+        currentTool.constructor.CONFIG.customOptions.forEach(option => {
+            if (option.type === 'slider') {
+                createSlider(option);
+            }
+        });
+    }
+}
+
+function createSlider(option) {
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = option.min;
+    slider.max = option.max;
+    slider.step = option.step;
+    slider.value = option.default;
+
+    slider.addEventListener('input', (e) => {
+        window.ToolRegistry.setToolOption(option.id, parseFloat(e.target.value));
+    });
+
+    // Append to info bar...
+}
+```
+
+### Modifying Canvas Constants
+
+Edit `config/constants.js`:
+
+```javascript
+// config/constants.js
+const Constants = {
+    canvas: {
+        minSize: 2,
+        maxSize: 128,           // Change max canvas size
+        defaultWidth: 32,       // Change default size
+        defaultHeight: 32,
+        minPixelSize: 8,
+        maxPixelSize: 50,
+        defaultPixelSize: 20    // Change default zoom
+    },
+    history: {
+        maxStates: 100,         // More undo states
+        debounceTime: 300       // Faster undo capture
+    },
+    autosave: {
+        interval: 15000,        // Autosave every 15 seconds
+        debounceTime: 1000
+    },
+    tools: {
+        brushSizes: [1, 2, 3, 5, 7, 10],  // Add more brush sizes
+        defaultBrushSize: 2,
+        maxBrushSize: 10,
+        shapeModes: ["fill", "stroke"],
+        defaultShapeMode: "fill"
+    },
+    rle: {
+        maxRunLength: 99,       // Don't change (format spec)
+        countDigits: 2          // Don't change (format spec)
+    }
+};
+```
+
+### Adding Event Listeners
+
+Use the EventBus for loose coupling:
+
+```javascript
+// In your custom module
+const eventBus = window.EventBus;
+
+// Listen to events
+eventBus.on(eventBus.Events.TOOL_CHANGED, (data) => {
+    console.log('Tool changed to:', data.toolId);
+});
+
+eventBus.on(eventBus.Events.CANVAS_CHANGED, () => {
+    console.log('Canvas was modified');
+});
+
+eventBus.on(eventBus.Events.COLOR_CHANGED, (data) => {
+    console.log('Color changed to index:', data.colorIndex);
+});
+
+// Emit custom events
+eventBus.on('myCustomEvent', (data) => {
+    // Handle custom event
+});
+
+eventBus.emit('myCustomEvent', { foo: 'bar' });
+```
+
+**Available events:**
+- `TOOL_CHANGED` - Tool switched
+- `CANVAS_CHANGED` - Canvas modified
+- `COLOR_CHANGED` - Color selected
+- `CANVAS_RESIZED` - Canvas size changed
+- `SELECTION_CHANGED` - Selection area changed
+- `APP_READY` - App initialization complete
+- `APP_ERROR` - Error occurred
+
+### Creating a Custom Export Format
+
+Example: Export as CSS background sprites
+
+```javascript
+// js/exporters/CSSExporter.js
+
+const CSSExporter = (function() {
+    'use strict';
+
+    /**
+     * Export pixel art as CSS data URL
+     */
+    function exportAsCSS(className) {
+        const dataString = window.PixelCanvas.exportToString();
+        const pngDataURL = window.PNGExport.getDataURL(dataString, 1);
+
+        return `
+.${className} {
+    width: ${window.PixelCanvas.getWidth()}px;
+    height: ${window.PixelCanvas.getHeight()}px;
+    background-image: url('${pngDataURL}');
+    background-size: cover;
+    image-rendering: pixelated;
+}
+        `.trim();
+    }
+
+    /**
+     * Export sprite sheet as CSS
+     */
+    function exportSpriteSheet(sprites) {
+        let css = '';
+
+        sprites.forEach((sprite, index) => {
+            css += exportAsCSS(`sprite-${index}`) + '\n\n';
+        });
+
+        return css;
+    }
+
+    return {
+        exportAsCSS,
+        exportSpriteSheet
+    };
+})();
+
+if (typeof window !== 'undefined') {
+    window.CSSExporter = CSSExporter;
+}
+```
+
+**Use in app:**
+
+```javascript
+// Add export button handler
+document.getElementById('exportCSSBtn').addEventListener('click', async () => {
+    const css = window.CSSExporter.exportAsCSS('my-sprite');
+    await window.ClipboardUtils.copyText(css);
+    await window.Dialogs.alert('Exported!', 'CSS copied to clipboard');
+});
+```
+
+### Debugging Tips
+
+**Enable debug logging:**
+
+```javascript
+// In browser console or add to app.js
+window.Logger.setLevel(window.Logger.LOG_LEVELS.DEBUG);
+
+// View log history
+console.table(window.Logger.getHistory());
+
+// Export logs
+const logs = window.Logger.exportLogs();
+console.log(logs);
+```
+
+**Inspect tool state:**
+
+```javascript
+// Get current tool
+const tool = window.ToolRegistry.getCurrentTool();
+console.log('Current tool:', tool.getId());
+console.log('Tool options:', tool.getOptions());
+
+// Get all registered tools
+const tools = window.ToolRegistry.getAllTools();
+console.log('Available tools:', tools.map(t => t.id));
+```
+
+**Inspect canvas state:**
+
+```javascript
+// Get pixel data
+const data = window.PixelCanvas.getPixelData();
+console.log('Canvas size:', data.length, 'x', data[0].length);
+
+// Get export string
+const exportString = window.PixelCanvas.exportToString();
+console.log('Export string length:', exportString.length);
+
+// Get compression stats
+const stats = window.Compression.getStats(exportString.split(':')[2]);
+console.log('Compression savings:', stats.savings + '%');
+```
+
+---
+
 ## 🎯 Use Cases
 
 - **Game Development**: Sprites, tiles, UI elements, particle effects
