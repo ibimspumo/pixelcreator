@@ -27,16 +27,19 @@ let tabCounter = 0;
 
 /**
  * Initialize tab manager
+ * @param {boolean} autoRestore - Whether to automatically restore saved tabs
  */
-function init() {
+function init(autoRestore = true) {
     createTabBar();
 
-    // Try to restore autosaved tabs
-    const restoredTabs = restoreAutosavedTabs();
+    if (autoRestore) {
+        // Try to restore autosaved tabs
+        const restoredTabs = restoreAutosavedTabs();
 
-    if (restoredTabs.length === 0) {
-        // No saved tabs, create new one
-        createNewTab('Untitled-1', 16, 16);
+        if (restoredTabs.length === 0) {
+            // No saved tabs, create new one
+            createNewTab('Untitled-1', 8, 8);
+        }
     }
 
     logger.info('Tab Manager initialized');

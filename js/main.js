@@ -94,7 +94,7 @@ async function initializeCoreSystems() {
 
     await initializeTools();
 
-    TabManager.init();
+    TabManager.init(false); // Don't auto-restore tabs - show welcome screen instead
     Autosave.init();
     Viewport.init();
     History.init({ onHistoryChange: updateHistoryUI });
@@ -135,6 +135,7 @@ function initializeUI() {
     setupToolbox();
     setupMenuBar();
     setupPropertiesPanel();
+    setupWelcomeScreen();
     updateLiveExportPreview();
     updateSizePresetHighlight();
 }
@@ -223,6 +224,56 @@ function setupPropertiesPanel() {
             input.addEventListener('input', updateSizePresetHighlight);
         }
     });
+}
+
+/**
+ * Setup welcome screen and its event handlers
+ * @private
+ */
+function setupWelcomeScreen() {
+    // Welcome screen "Create New" button
+    bindEvent('welcomeNewBtn', showNewFileDialog);
+
+    // Welcome screen "Open File" button
+    bindEvent('welcomeLoadBtn', showOpenFileDialog);
+
+    // New File Modal handlers
+    bindEvent('closeNewFileModal', closeNewFileModal);
+    bindEvent('cancelNewFileBtn', closeNewFileModal);
+    bindEvent('confirmNewFileBtn', handleCreateNewFile);
+
+    // File Modal close handler
+    bindEvent('closeModal', () => {
+        document.getElementById('fileModal').style.display = 'none';
+    });
+
+    // New File Modal preset buttons
+    document.querySelectorAll('.preset-btn-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const size = parseInt(btn.dataset.size);
+            document.getElementById('newFileWidth').value = size;
+            document.getElementById('newFileHeight').value = size;
+            document.querySelectorAll('.preset-btn-modal').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    // Sync preset buttons with manual input
+    ['newFileWidth', 'newFileHeight'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', () => {
+                const width = parseInt(document.getElementById('newFileWidth').value);
+                const height = parseInt(document.getElementById('newFileHeight').value);
+                document.querySelectorAll('.preset-btn-modal').forEach(btn => {
+                    const size = parseInt(btn.dataset.size);
+                    btn.classList.toggle('active', width === size && height === size);
+                });
+            });
+        }
+    });
+
+    logger.debug('Welcome screen setup complete');
 }
 
 /**
@@ -330,6 +381,228 @@ function updateSizePresetHighlight() {
     document.querySelectorAll('.preset-btn').forEach(btn => {
         btn.classList.toggle('active', width === parseInt(btn.dataset.size) && height === parseInt(btn.dataset.size));
     });
+}
+
+// ==================== WELCOME SCREEN HANDLERS ====================
+
+/**
+ * Show welcome screen
+ */
+function showWelcomeScreen() {
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('canvasContainer').style.display = 'none';
+}
+
+/**
+ * Hide welcome screen and show canvas
+ */
+function hideWelcomeScreen() {
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('canvasContainer').style.display = 'flex';
+}
+
+/**
+ * Show new file dialog
+ */
+function showNewFileDialog() {
+    const modal = document.getElementById('newFileModal');
+    modal.style.display = 'flex';
+
+    // Reset form to defaults
+    document.getElementById('newFileName').value = '';
+    document.getElementById('newFileWidth').value = '8';
+    document.getElementById('newFileHeight').value = '8';
+    document.querySelectorAll('.preset-btn-modal').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.size === '8');
+    });
+
+    // Focus on name input
+    setTimeout(() => document.getElementById('newFileName').focus(), 100);
+}
+
+/**
+ * Close new file modal
+ */
+function closeNewFileModal() {
+    document.getElementById('newFileModal').style.display = 'none';
+}
+
+/**
+ * Handle creation of new file from welcome screen dialog
+ */
+function handleCreateNewFile() {
+    const name = document.getElementById('newFileName').value.trim() || 'Untitled';
+    const width = parseInt(document.getElementById('newFileWidth').value);
+    const height = parseInt(document.getElementById('newFileHeight').value);
+
+    // Validate dimensions
+    if (width < constants.canvas.minSize || width > constants.canvas.maxSize ||
+        height < constants.canvas.minSize || height > constants.canvas.maxSize) {
+        alert(`Canvas size must be between ${constants.canvas.minSize}×${constants.canvas.minSize} and ${constants.canvas.maxSize}×${constants.canvas.maxSize}`);
+        return;
+    }
+
+    closeNewFileModal();
+    hideWelcomeScreen();
+
+    // Create new tab
+    TabManager.createNewTab(name, width, height);
+
+    logger.info(`Created new file: ${name} (${width}×${height})`);
+}
+
+/**
+ * Show open file dialog with file grid and previews
+ */
+async function showOpenFileDialog() {
+    const files = FileManager.getAllFiles();
+
+    if (files.length === 0) {
+        await Dialogs.alert('No Files', 'No saved files found. Create a new file to get started.', 'info');
+        return;
+    }
+
+    const modal = document.getElementById('fileModal');
+    const fileList = document.getElementById('fileList');
+    const noFilesMessage = document.getElementById('noFilesMessage');
+
+    // Clear previous content
+    fileList.innerHTML = '';
+
+    // Create file grid items with previews
+    files.forEach(file => {
+        const item = createFileGridItem(file);
+        item.addEventListener('click', () => {
+            loadFileFromWelcomeScreen(file);
+            modal.style.display = 'none';
+        });
+        fileList.appendChild(item);
+    });
+
+    noFilesMessage.style.display = files.length === 0 ? 'block' : 'none';
+    modal.style.display = 'flex';
+}
+
+/**
+ * Create file grid item with preview
+ * @param {Object} file - File object
+ * @returns {HTMLElement}
+ */
+function createFileGridItem(file) {
+    const item = document.createElement('div');
+    item.className = 'file-grid-item';
+
+    // Generate preview canvas
+    const preview = generateFilePreview(file.data);
+
+    // Format date
+    const date = new Date(file.timestamp);
+    const dateStr = date.toLocaleDateString();
+
+    // Get dimensions from file object (already parsed in SavedFile)
+    const dimensions = file.width && file.height ? `${file.width}×${file.height}` : 'Unknown';
+
+    item.innerHTML = `
+        <div class="file-grid-preview">
+            ${preview.outerHTML}
+        </div>
+        <div class="file-grid-name">${file.name}</div>
+        <div class="file-grid-info">${dimensions}</div>
+        <div class="file-grid-date">${dateStr}</div>
+    `;
+
+    return item;
+}
+
+/**
+ * Generate preview canvas for a file
+ * @param {string} dataString - Pixel data string (WxH:DATA)
+ * @returns {HTMLCanvasElement}
+ */
+function generateFilePreview(dataString) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Parse data string
+    const match = dataString.match(/^(\d+)x(\d+):(.+)$/);
+    if (!match) {
+        canvas.width = 64;
+        canvas.height = 64;
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, 0, 64, 64);
+        return canvas;
+    }
+
+    const width = parseInt(match[1]);
+    const height = parseInt(match[2]);
+    let data = match[3];
+
+    // Handle RLE compression
+    if (data.startsWith('RLE:')) {
+        data = data.substring(4);
+        // Decompress (simple implementation)
+        let decompressed = '';
+        for (let i = 0; i < data.length; i += 3) {
+            const count = parseInt(data.substring(i, i + 2));
+            const char = data[i + 2];
+            decompressed += char.repeat(count);
+        }
+        data = decompressed;
+    }
+
+    // Set canvas size (max 100x100 for preview)
+    const scale = Math.min(100 / width, 100 / height);
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+
+    // Draw pixels
+    ctx.imageSmoothingEnabled = false;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const index = y * width + x;
+            if (index < data.length) {
+                const colorChar = data[index];
+                const color = getColorFromChar(colorChar);
+                if (color && color !== '#00000000') {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x * scale, y * scale, scale, scale);
+                }
+            }
+        }
+    }
+
+    return canvas;
+}
+
+/**
+ * Get color hex from Base64 character
+ * @param {string} char - Base64 character
+ * @returns {string|null}
+ */
+function getColorFromChar(char) {
+    if (!ColorPalette) return null;
+    // Use getColorByChar which is the correct API
+    return ColorPalette.getColorByChar(char);
+}
+
+/**
+ * Load file from welcome screen
+ * @param {Object} file - File object
+ */
+function loadFileFromWelcomeScreen(file) {
+    hideWelcomeScreen();
+
+    // Create tab with file data
+    const match = file.data.match(/^(\d+)x(\d+):/);
+    const width = match ? parseInt(match[1]) : 16;
+    const height = match ? parseInt(match[2]) : 16;
+
+    TabManager.createNewTab(file.name, width, height, file.data);
+    FileManager.setCurrentFileName(file.name);
+    TabManager.markCurrentTabClean();
+
+    logger.info(`Loaded file: ${file.name}`);
 }
 
 function handleNew() {
