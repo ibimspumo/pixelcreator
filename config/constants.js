@@ -7,8 +7,8 @@ const Constants = {
     canvas: {
         minSize: 2,
         maxSize: 128,
-        defaultWidth: 16,
-        defaultHeight: 16,
+        defaultWidth: 8,
+        defaultHeight: 8,
         minPixelSize: 8,
         maxPixelSize: 50,
         defaultPixelSize: 30

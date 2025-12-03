@@ -139,6 +139,13 @@ function clear() {
     }
 }
 
+function hasContent() {
+    if (!PixelData) return false;
+    const data = PixelData.getData();
+    // Check if any pixel is not transparent (index 0)
+    return data.some(row => row.some(pixel => pixel !== 0));
+}
+
 function resize(newWidth, newHeight) {
     if (!PixelData || !CanvasRenderer) return false;
 
@@ -221,6 +228,7 @@ function setChangeCallback(callback) {
 const PixelCanvas = {
     init,
     clear,
+    hasContent,
     resize,
     exportToString,
     importFromString,
