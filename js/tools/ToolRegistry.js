@@ -1,35 +1,29 @@
 /**
- * ToolRegistry - Dynamic Tool Management System
+ * ToolRegistry - Dynamic Tool Management System (Refactored)
  *
  * Features:
- * - Automatic tool discovery and registration
- * - Tool lifecycle management (init, activate, deactivate)
+ * - Tool registration and lifecycle management
  * - Tool switching with state preservation
  * - Event-driven architecture
- * - Singleton pattern for global access
+ * - Delegates drawing to ToolDrawingProxy
+ * - Delegates state to ToolStateManager
  *
  * @module ToolRegistry
  */
 
 import logger from '../core/Logger.js';
 import BaseTool from './BaseTool.js';
+import * as StateManager from './ToolStateManager.js';
+import * as DrawingProxy from './ToolDrawingProxy.js';
 
-    // Registry state
+// Registry state
 const tools = new Map(); // id -> tool instance
 const toolOrder = []; // Ordered list of tool IDs
 let currentTool = null;
 let currentToolId = null;
 
-    // Shared state across all tools
-let sharedOptions = {
-    brushSize: 1,
-    shapeMode: 'fill',
-    colorCode: 1
-};
-
-    // Callbacks
+// Callbacks
 let onToolChangeCallback = null;
-let onToolOptionChangeCallback = null;
 
 /**
  * Initialize the tool registry
@@ -38,18 +32,16 @@ let onToolOptionChangeCallback = null;
 function init(options = {}) {
     logger.info?.('ToolRegistry initializing...');
 
-        // Set callbacks
+    // Set callbacks
     if (options.onToolChange) {
         onToolChangeCallback = options.onToolChange;
     }
-    if (options.onToolOptionChange) {
-        onToolOptionChangeCallback = options.onToolOptionChange;
-    }
 
-        // Set shared options
-    if (options.sharedOptions) {
-        sharedOptions = { ...sharedOptions, ...options.sharedOptions };
-    }
+    // Initialize state manager
+    StateManager.initStateManager(
+        options.sharedOptions,
+        options.onToolOptionChange
+    );
 
     logger.info?.('ToolRegistry initialized');
 }
@@ -61,7 +53,7 @@ function init(options = {}) {
  */
 function registerTool(ToolClass) {
     try {
-            // Validate tool class
+        // Validate tool class
         if (!ToolClass || !ToolClass.CONFIG) {
             logger.error?.('Invalid tool class: missing CONFIG', ToolClass);
             return false;
@@ -75,36 +67,28 @@ function registerTool(ToolClass) {
             return false;
         }
 
-            // Check for duplicates
+        // Check for duplicates
         if (tools.has(id)) {
             logger.warn?.(`Tool "${id}" already registered, skipping`);
             return false;
         }
 
-            // Create tool instance
+        // Create tool instance
         const toolInstance = new ToolClass();
 
-            // Set callbacks
+        // Set callbacks
         toolInstance.setChangeCallback(() => {
             logger.debug?.(`Tool ${id} triggered change`);
         });
 
         toolInstance.setOptionChangeCallback((key, value, oldValue) => {
-                // Update shared options
-            if (sharedOptions.hasOwnProperty(key)) {
-                sharedOptions[key] = value;
-            }
-
-                // Notify callback
-            if (onToolOptionChangeCallback) {
-                onToolOptionChangeCallback(key, value, oldValue);
-            }
+            StateManager.handleToolOptionChange(key, value, oldValue);
         });
 
-            // Initialize tool
+        // Initialize tool
         toolInstance.init();
 
-            // Register
+        // Register
         tools.set(id, toolInstance);
         toolOrder.push(id);
 
@@ -145,14 +129,15 @@ function unregisterTool(id) {
         return false;
     }
 
-        // Deactivate if current
+    // Deactivate if current
     if (currentToolId === id) {
         tool.deactivate();
         currentTool = null;
         currentToolId = null;
+        DrawingProxy.setCurrentToolForDrawing(null);
     }
 
-        // Destroy and remove
+    // Destroy and remove
     tool.destroy();
     tools.delete(id);
 
@@ -168,53 +153,43 @@ function unregisterTool(id) {
 /**
  * Set current tool by ID
  * @param {string} id - Tool ID
- * @returns {boolean} True if tool was activated
+ * @returns {boolean} True if set successfully
  */
 function setCurrentTool(id) {
-        // Check if tool exists
     const tool = tools.get(id);
     if (!tool) {
-        logger.error?.(`Tool "${id}" not found`);
+        logger.warn?.(`Tool "${id}" not found`);
         return false;
     }
 
-        // Same tool, ignore
-    if (currentToolId === id) {
-        logger.debug?.(`Tool "${id}" already active`);
-        return true;
-    }
-
-        // Deactivate current tool
-    if (currentTool) {
+    // Deactivate current tool
+    if (currentTool && currentTool !== tool) {
         currentTool.deactivate();
-        logger.debug?.(`Deactivated tool: ${currentToolId}`);
     }
 
-        // Activate new tool
-    tool.activate();
-
-        // Sync shared options to tool
-    Object.keys(sharedOptions).forEach(key => {
-        if (tool.options.hasOwnProperty(key)) {
-            tool.setOption(key, sharedOptions[key]);
-        }
-    });
-
+    // Activate new tool
     currentTool = tool;
     currentToolId = id;
+    currentTool.activate();
 
-        // Notify callback
+    // Sync shared options to tool
+    StateManager.syncOptionsToTool(currentTool);
+
+    // Update drawing proxy
+    DrawingProxy.setCurrentToolForDrawing(currentTool);
+
+    // Notify callback
     if (onToolChangeCallback) {
-        onToolChangeCallback(id, tool.getConfig());
+        onToolChangeCallback(id, tool);
     }
 
-    logger.info?.(`Tool activated: ${tool.getName()} (${id})`);
+    logger.info?.(`Current tool set: ${id}`);
     return true;
 }
 
 /**
  * Get current tool instance
- * @returns {BaseTool|null} Current tool
+ * @returns {Object|null} Current tool
  */
 function getCurrentTool() {
     return currentTool;
@@ -231,7 +206,7 @@ function getCurrentToolId() {
 /**
  * Get tool by ID
  * @param {string} id - Tool ID
- * @returns {BaseTool|null} Tool instance
+ * @returns {Object|null} Tool instance
  */
 function getTool(id) {
     return tools.get(id) || null;
@@ -245,18 +220,19 @@ function getAllTools() {
     return toolOrder.map(id => {
         const tool = tools.get(id);
         return tool ? tool.getConfig() : null;
-    }).filter(Boolean);
+    }).filter(config => config !== null);
 }
 
 /**
- * Get tool by shortcut key
- * @param {string} key - Shortcut key (uppercase)
- * @returns {BaseTool|null} Tool instance
+ * Get tool by keyboard shortcut
+ * @param {string} key - Keyboard key
+ * @returns {Object|null} Tool instance
  */
 function getToolByShortcut(key) {
     const upperKey = key.toUpperCase();
     for (const [id, tool] of tools) {
-        if (tool.getConfig().shortcut === upperKey) {
+        const config = tool.getConfig();
+        if (config.shortcut === upperKey) {
             return tool;
         }
     }
@@ -264,176 +240,35 @@ function getToolByShortcut(key) {
 }
 
 /**
- * Set tool option (applies to current tool and shared state)
- * @param {string} key - Option key
- * @param {*} value - Option value
- */
-function setToolOption(key, value) {
-        // Update shared options
-    if (sharedOptions.hasOwnProperty(key)) {
-        sharedOptions[key] = value;
-    }
-
-        // Update current tool
-    if (currentTool) {
-        currentTool.setOption(key, value);
-    }
-}
-
-/**
- * Get tool option
- * @param {string} key - Option key
- * @returns {*} Option value
- */
-function getToolOption(key) {
-    if (currentTool) {
-        return currentTool.getOption(key);
-    }
-    return sharedOptions[key];
-}
-
-/**
- * Get all shared options
- * @returns {Object} Shared options
- */
-function getSharedOptions() {
-    return { ...sharedOptions };
-}
-
-    // ==================== DRAWING DELEGATION ====================
-
-/**
- * Start drawing with current tool
- * @param {number} x - X coordinate
- * @param {number} y - Y coordinate
- * @param {Array<Array<number>>} pixelData - Pixel data
- * @param {Object} context - Drawing context
- * @returns {boolean} True if drawing started
- */
-function startDrawing(x, y, pixelData, context = {}) {
-    if (!currentTool) {
-        logger.warn?.('No tool active, cannot start drawing');
-        return false;
-    }
-
-        // Inject shared options into context
-    context.brushSize = sharedOptions.brushSize;
-    context.shapeMode = sharedOptions.shapeMode;
-    context.colorCode = sharedOptions.colorCode;
-
-    return currentTool.startDrawing(x, y, pixelData, context);
-}
-
-/**
- * Continue drawing with current tool
- * @param {number} x - X coordinate
- * @param {number} y - Y coordinate
- * @param {Array<Array<number>>} pixelData - Pixel data
- * @param {Object} context - Drawing context
- * @returns {boolean} True if data was modified
- */
-function continueDrawing(x, y, pixelData, context = {}) {
-    if (!currentTool) {
-        return false;
-    }
-
-    context.brushSize = sharedOptions.brushSize;
-    context.shapeMode = sharedOptions.shapeMode;
-    context.colorCode = sharedOptions.colorCode;
-
-    return currentTool.continueDrawing(x, y, pixelData, context);
-}
-
-/**
- * End drawing with current tool
- * @param {number} x - X coordinate
- * @param {number} y - Y coordinate
- * @param {Array<Array<number>>} pixelData - Pixel data
- * @param {Object} context - Drawing context
- * @returns {boolean} True if data was modified
- */
-function endDrawing(x, y, pixelData, context = {}) {
-    if (!currentTool) {
-        return false;
-    }
-
-    context.brushSize = sharedOptions.brushSize;
-    context.shapeMode = sharedOptions.shapeMode;
-    context.colorCode = sharedOptions.colorCode;
-
-    return currentTool.endDrawing(x, y, pixelData, context);
-}
-
-/**
- * Cancel drawing with current tool
- */
-function cancelDrawing() {
-    if (currentTool) {
-        currentTool.cancelDrawing();
-    }
-}
-
-    // ==================== SELECTION SUPPORT ====================
-
-/**
- * Set selection for current tool
- * @param {Object} bounds - Selection bounds {x1, y1, x2, y2}
- */
-function setSelection(bounds) {
-    if (currentTool) {
-        currentTool.setSelection(bounds);
-    }
-}
-
-/**
- * Clear selection for current tool
- */
-function clearSelection() {
-    if (currentTool) {
-        currentTool.clearSelection();
-    }
-}
-
-/**
- * Check if current tool respects selection
- * @returns {boolean}
- */
-function respectsSelection() {
-    return currentTool ? currentTool.respectsSelection() : true;
-}
-
-    // ==================== UTILITIES ====================
-
-/**
- * Check if a tool is registered
+ * Check if tool is registered
  * @param {string} id - Tool ID
- * @returns {boolean}
+ * @returns {boolean} True if registered
  */
 function hasTool(id) {
     return tools.has(id);
 }
 
 /**
- * Get number of registered tools
- * @returns {number}
+ * Get tool count
+ * @returns {number} Number of registered tools
  */
 function getToolCount() {
     return tools.size;
 }
 
 /**
- * Clear all tools (for cleanup/reset)
+ * Clear all tools
  */
 function clearAll() {
-        // Deactivate current
+    // Deactivate current tool
     if (currentTool) {
         currentTool.deactivate();
     }
 
-        // Destroy all
+    // Destroy all tools
     tools.forEach(tool => tool.destroy());
 
-        // Clear
+    // Clear
     tools.clear();
     toolOrder.length = 0;
     currentTool = null;
@@ -449,13 +284,14 @@ function clearAll() {
 function getStats() {
     return {
         totalTools: tools.size,
-        currentTool: currentToolId,
-        toolOrder: [...toolOrder],
-        sharedOptions: { ...sharedOptions }
+        currentToolId: currentToolId,
+        toolIds: [...toolOrder]
     };
 }
 
+// Export registry interface
 const ToolRegistry = {
+    // Core
     init,
     registerTool,
     registerTools,
@@ -466,20 +302,24 @@ const ToolRegistry = {
     getTool,
     getAllTools,
     getToolByShortcut,
-    setToolOption,
-    getToolOption,
-    getSharedOptions,
-    startDrawing,
-    continueDrawing,
-    endDrawing,
-    cancelDrawing,
-    setSelection,
-    clearSelection,
-    respectsSelection,
     hasTool,
     getToolCount,
     clearAll,
-    getStats
+    getStats,
+
+    // State management (delegated)
+    setToolOption: StateManager.setToolOption,
+    getToolOption: StateManager.getToolOption,
+    getSharedOptions: StateManager.getSharedOptions,
+
+    // Drawing operations (delegated)
+    startDrawing: DrawingProxy.startDrawing,
+    continueDrawing: DrawingProxy.continueDrawing,
+    endDrawing: DrawingProxy.endDrawing,
+    cancelDrawing: DrawingProxy.cancelDrawing,
+    setSelection: DrawingProxy.setSelection,
+    clearSelection: DrawingProxy.clearSelection,
+    respectsSelection: DrawingProxy.respectsSelection
 };
 
 export default ToolRegistry;

@@ -1,37 +1,27 @@
 /**
- * BaseTool - Abstract Base Class for All Drawing Tools
+ * BaseTool - Abstract Base Class for All Drawing Tools (Refactored)
  *
  * Provides a comprehensive framework for implementing drawing tools with:
  * - Lifecycle hooks (init, activate, deactivate, destroy)
  * - Drawing phases (start, continue, end, cancel)
- * - State management (tool options, history, undo/redo)
- * - Event handling (mouse, keyboard, touch)
+ * - State management (tool options)
  * - Preview system for shape tools
- * - Selection integration
- * - Custom cursors and UI updates
- * - Validation and error handling
- * - Performance optimization (debouncing, throttling)
+ * - Mixins for selection and event handling
  *
  * @abstract
  * @class BaseTool
  */
 
 import logger from '../core/Logger.js';
+import * as ToolHelpers from './mixins/ToolHelpers.js';
+import { withSelection } from './mixins/ToolSelectionMixin.js';
+import { withEvents } from './mixins/ToolEventMixin.js';
 
-class BaseTool {
+// Base class without mixins
+class BaseToolCore {
     /**
      * Tool configuration - MUST be overridden by subclasses
      * @static
-     * @type {Object}
-     * @property {string} id - Unique tool identifier (lowercase, no spaces)
-     * @property {string} name - Display name
-     * @property {string} icon - Material Symbol icon name
-     * @property {string} shortcut - Keyboard shortcut (single uppercase letter)
-     * @property {string} cursor - CSS cursor style
-     * @property {boolean} hasSizeOption - Shows brush size UI
-     * @property {boolean} hasShapeOption - Shows fill/stroke UI
-     * @property {string} description - Tool description for tooltips
-     * @property {string} category - Tool category (drawing, shape, selection, navigation)
      */
     static CONFIG = {
         id: 'base-tool',
@@ -51,19 +41,16 @@ class BaseTool {
      */
     static DEFAULT_OPTIONS = {
         brushSize: 1,
-        shapeMode: 'fill', // 'fill' or 'stroke'
+        shapeMode: 'fill',
         opacity: 1.0,
         antiAlias: false,
         snapToGrid: false,
-        constrainProportions: false // Shift key behavior
+        constrainProportions: false
     };
 
-    /**
-     * Constructor
-     */
     constructor() {
         // Prevent direct instantiation of base class
-        if (new.target === BaseTool) {
+        if (new.target === BaseToolCore) {
             throw new Error('BaseTool is abstract and cannot be instantiated directly');
         }
 
@@ -85,16 +72,8 @@ class BaseTool {
         this.lastY = 0;
         this.previewData = null;
 
-        // Selection state
-        this.selectionActive = false;
-        this.selectionBounds = null;
-
         // Performance optimization
-        this.throttleDelay = 16; // ~60fps
-        this.lastThrottleTime = 0;
-
-        // Event handlers (bound for proper cleanup)
-        this.boundHandlers = {};
+        this.throttle = ToolHelpers.createThrottle(16);
 
         // Callbacks
         this.onChangeCallback = null;
@@ -113,7 +92,6 @@ class BaseTool {
 
     /**
      * Initialize tool - called once when tool is registered
-     * Override to setup resources, load assets, etc.
      */
     init() {
         this.logger.debug?.(`${this.getName()} tool initialized`);
@@ -121,7 +99,6 @@ class BaseTool {
 
     /**
      * Activate tool - called when tool is selected
-     * Override to setup event listeners, show UI, etc.
      */
     activate() {
         this.isActive = true;
@@ -130,7 +107,6 @@ class BaseTool {
 
     /**
      * Deactivate tool - called when switching to another tool
-     * Override to cleanup, hide UI, save state, etc.
      */
     deactivate() {
         this.isActive = false;
@@ -140,7 +116,6 @@ class BaseTool {
 
     /**
      * Destroy tool - called when tool is unregistered
-     * Override to cleanup resources, remove listeners, etc.
      */
     destroy() {
         this.removeAllEventListeners();
@@ -152,11 +127,6 @@ class BaseTool {
 
     /**
      * Start drawing operation
-     * @param {number} x - X coordinate (pixel grid)
-     * @param {number} y - Y coordinate (pixel grid)
-     * @param {Array<Array<number>>} pixelData - 2D array of color indices
-     * @param {Object} context - Drawing context (colorCode, modifiers, etc.)
-     * @returns {boolean} True if drawing started successfully
      */
     startDrawing(x, y, pixelData, context = {}) {
         if (!this.isActive) {
@@ -164,7 +134,7 @@ class BaseTool {
             return false;
         }
 
-        if (!this.validateCoordinates(x, y, pixelData)) {
+        if (!ToolHelpers.validateCoordinates(x, y, pixelData)) {
             this.logger.warn?.(`Invalid coordinates: (${x}, ${y})`);
             return false;
         }
@@ -177,49 +147,37 @@ class BaseTool {
 
         // Save preview data for tools that need it
         if (this.needsPreview()) {
-            this.previewData = this.clonePixelData(pixelData);
+            this.previewData = ToolHelpers.clonePixelData(pixelData);
         }
 
-        // Tool-specific implementation
         return this.onDrawStart(x, y, pixelData, context);
     }
 
     /**
-     * Continue drawing operation (mouse/touch move)
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @param {Object} context - Drawing context
-     * @returns {boolean} True if data was modified
+     * Continue drawing operation
      */
     continueDrawing(x, y, pixelData, context = {}) {
         if (!this.isDrawing) {
             return false;
         }
 
-        if (!this.validateCoordinates(x, y, pixelData)) {
+        if (!ToolHelpers.validateCoordinates(x, y, pixelData)) {
             return false;
         }
 
         // Throttle for performance
-        if (this.shouldThrottle()) {
+        if (this.throttle.shouldThrottle()) {
             return false;
         }
 
         this.lastX = x;
         this.lastY = y;
 
-        // Tool-specific implementation
         return this.onDrawContinue(x, y, pixelData, context);
     }
 
     /**
-     * End drawing operation (mouse/touch up)
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @param {Object} context - Drawing context
-     * @returns {boolean} True if data was modified
+     * End drawing operation
      */
     endDrawing(x, y, pixelData, context = {}) {
         if (!this.isDrawing) {
@@ -228,24 +186,22 @@ class BaseTool {
 
         this.isDrawing = false;
 
-        if (!this.validateCoordinates(x, y, pixelData)) {
-            // Use last valid coordinates
+        if (!ToolHelpers.validateCoordinates(x, y, pixelData)) {
             x = this.lastX;
             y = this.lastY;
         }
 
-        // Tool-specific implementation
         const modified = this.onDrawEnd(x, y, pixelData, context);
 
         // Cleanup
         this.previewData = null;
-        this.lastThrottleTime = 0;
+        this.throttle.reset();
 
         return modified;
     }
 
     /**
-     * Cancel drawing operation (Escape key, context loss, etc.)
+     * Cancel drawing operation
      */
     cancelDrawing() {
         if (this.isDrawing) {
@@ -259,49 +215,18 @@ class BaseTool {
     // ==================== TOOL-SPECIFIC IMPLEMENTATIONS ====================
     // Subclasses MUST override these methods
 
-    /**
-     * Handle draw start - implement tool-specific logic
-     * @abstract
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @param {Object} context - Drawing context
-     * @returns {boolean} True if drawing started successfully
-     */
     onDrawStart(x, y, pixelData, context) {
         throw new Error(`${this.constructor.name} must implement onDrawStart()`);
     }
 
-    /**
-     * Handle draw continue - implement tool-specific logic
-     * @abstract
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @param {Object} context - Drawing context
-     * @returns {boolean} True if data was modified
-     */
     onDrawContinue(x, y, pixelData, context) {
         throw new Error(`${this.constructor.name} must implement onDrawContinue()`);
     }
 
-    /**
-     * Handle draw end - implement tool-specific logic
-     * @abstract
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @param {Object} context - Drawing context
-     * @returns {boolean} True if data was modified
-     */
     onDrawEnd(x, y, pixelData, context) {
         throw new Error(`${this.constructor.name} must implement onDrawEnd()`);
     }
 
-    /**
-     * Handle draw cancel - cleanup tool-specific state
-     * Optional override
-     */
     onDrawCancel() {
         // Optional override
     }
@@ -310,8 +235,6 @@ class BaseTool {
 
     /**
      * Set tool option
-     * @param {string} key - Option key
-     * @param {*} value - Option value
      */
     setOption(key, value) {
         if (this.options.hasOwnProperty(key)) {
@@ -329,8 +252,6 @@ class BaseTool {
 
     /**
      * Get tool option
-     * @param {string} key - Option key
-     * @returns {*} Option value
      */
     getOption(key) {
         return this.options[key];
@@ -338,7 +259,6 @@ class BaseTool {
 
     /**
      * Get all options
-     * @returns {Object} All options
      */
     getAllOptions() {
         return { ...this.options };
@@ -354,9 +274,6 @@ class BaseTool {
 
     /**
      * Handle option change - override for custom behavior
-     * @param {string} key - Option key
-     * @param {*} newValue - New value
-     * @param {*} oldValue - Old value
      */
     onOptionChanged(key, newValue, oldValue) {
         this.logger.debug?.(`${this.getName()} option changed: ${key} = ${newValue}`);
@@ -372,248 +289,91 @@ class BaseTool {
     // ==================== HELPER METHODS ====================
 
     /**
-     * Check if tool needs preview mode (for shape tools)
-     * @returns {boolean}
+     * Check if tool needs preview mode
      */
     needsPreview() {
-        return false; // Override in subclasses that need preview
+        return false; // Override in subclasses
     }
 
     /**
-     * Validate coordinates are within bounds
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @returns {boolean}
+     * Validate coordinates
      */
     validateCoordinates(x, y, pixelData) {
-        if (!pixelData || pixelData.length === 0) {
-            return false;
-        }
-        const height = pixelData.length;
-        const width = pixelData[0].length;
-        return x >= 0 && x < width && y >= 0 && y < height;
+        return ToolHelpers.validateCoordinates(x, y, pixelData);
     }
 
     /**
-     * Clone pixel data for preview
-     * @param {Array<Array<number>>} pixelData - Original data
-     * @returns {Array<Array<number>>} Cloned data
+     * Clone pixel data
      */
     clonePixelData(pixelData) {
-        return pixelData.map(row => [...row]);
+        return ToolHelpers.clonePixelData(pixelData);
     }
 
     /**
      * Restore preview data
-     * @param {Array<Array<number>>} pixelData - Target data
      */
     restorePreviewData(pixelData) {
-        if (!this.previewData) {
-            return;
-        }
-        for (let y = 0; y < pixelData.length; y++) {
-            for (let x = 0; x < pixelData[y].length; x++) {
-                pixelData[y][x] = this.previewData[y][x];
-            }
-        }
+        ToolHelpers.restorePreviewData(pixelData, this.previewData);
     }
 
     /**
-     * Check if should throttle (performance optimization)
-     * @returns {boolean}
-     */
-    shouldThrottle() {
-        const now = Date.now();
-        if (now - this.lastThrottleTime < this.throttleDelay) {
-            return true;
-        }
-        this.lastThrottleTime = now;
-        return false;
-    }
-
-    /**
-     * Set pixel at coordinates
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @param {number} colorCode - Color code
-     * @returns {boolean} True if pixel was changed
+     * Set pixel
      */
     setPixel(x, y, pixelData, colorCode) {
-        const height = pixelData.length;
-        const width = pixelData[0].length;
-
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            if (pixelData[y][x] !== colorCode) {
-                pixelData[y][x] = colorCode;
-                return true;
-            }
-        }
-        return false;
+        return ToolHelpers.setPixel(x, y, pixelData, colorCode);
     }
 
     /**
-     * Get pixel at coordinates
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @param {Array<Array<number>>} pixelData - Pixel data
-     * @returns {number|null} Color code or null
+     * Get pixel
      */
     getPixel(x, y, pixelData) {
-        const height = pixelData.length;
-        const width = pixelData[0].length;
-
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            return pixelData[y][x];
-        }
-        return null;
-    }
-
-    // ==================== EVENT HANDLING ====================
-
-    /**
-     * Add event listener with automatic cleanup tracking
-     * @param {EventTarget} target - Event target
-     * @param {string} event - Event name
-     * @param {Function} handler - Event handler
-     */
-    addEventListener(target, event, handler) {
-        const boundHandler = handler.bind(this);
-        target.addEventListener(event, boundHandler);
-
-        const key = `${event}_${Date.now()}`;
-        this.boundHandlers[key] = { target, event, handler: boundHandler };
-    }
-
-    /**
-     * Remove all event listeners
-     */
-    removeAllEventListeners() {
-        Object.values(this.boundHandlers).forEach(({ target, event, handler }) => {
-            target.removeEventListener(event, handler);
-        });
-        this.boundHandlers = {};
-    }
-
-    // ==================== SELECTION SUPPORT ====================
-
-    /**
-     * Check if tool respects selection bounds
-     * @returns {boolean}
-     */
-    respectsSelection() {
-        return true; // Override to return false for tools that ignore selection
-    }
-
-    /**
-     * Check if coordinates are within selection
-     * @param {number} x - X coordinate
-     * @param {number} y - Y coordinate
-     * @returns {boolean}
-     */
-    isInSelection(x, y) {
-        if (!this.selectionActive || !this.selectionBounds) {
-            return true; // No selection = everything is valid
-        }
-
-        const { x1, y1, x2, y2 } = this.selectionBounds;
-        return x >= x1 && x <= x2 && y >= y1 && y <= y2;
-    }
-
-    /**
-     * Set selection bounds
-     * @param {Object} bounds - Selection bounds {x1, y1, x2, y2}
-     */
-    setSelection(bounds) {
-        this.selectionActive = true;
-        this.selectionBounds = bounds;
-    }
-
-    /**
-     * Clear selection
-     */
-    clearSelection() {
-        this.selectionActive = false;
-        this.selectionBounds = null;
+        return ToolHelpers.getPixel(x, y, pixelData);
     }
 
     // ==================== GETTERS ====================
 
-    /**
-     * Get tool ID
-     * @returns {string}
-     */
     getId() {
         return this.constructor.CONFIG.id;
     }
 
-    /**
-     * Get tool name
-     * @returns {string}
-     */
     getName() {
         return this.constructor.CONFIG.name;
     }
 
-    /**
-     * Get tool config
-     * @returns {Object}
-     */
     getConfig() {
         return { ...this.constructor.CONFIG };
     }
 
-    /**
-     * Get tool cursor
-     * @returns {string}
-     */
     getCursor() {
         return this.constructor.CONFIG.cursor;
     }
 
-    /**
-     * Check if tool has size option
-     * @returns {boolean}
-     */
     hasSizeOption() {
         return this.constructor.CONFIG.hasSizeOption;
     }
 
-    /**
-     * Check if tool has shape option
-     * @returns {boolean}
-     */
     hasShapeOption() {
         return this.constructor.CONFIG.hasShapeOption;
     }
 
     // ==================== CALLBACKS ====================
 
-    /**
-     * Set change callback
-     * @param {Function} callback - Callback function
-     */
     setChangeCallback(callback) {
         this.onChangeCallback = callback;
     }
 
-    /**
-     * Set option change callback
-     * @param {Function} callback - Callback function
-     */
     setOptionChangeCallback(callback) {
         this.onOptionChangeCallback = callback;
     }
 
-    /**
-     * Trigger change callback
-     */
     triggerChange() {
         if (this.onChangeCallback) {
             this.onChangeCallback();
         }
     }
 }
+
+// Apply mixins to create final BaseTool class
+const BaseTool = withEvents(withSelection(BaseToolCore));
 
 export default BaseTool;

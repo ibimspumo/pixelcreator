@@ -14,6 +14,7 @@ import Dialogs from './dialogs.js';
 import PixelCanvas from './canvas/PixelCanvas.js';
 import Autosave from './autosave.js';
 import Compression from './compression.js';
+import StorageUtils from './utils/StorageUtils.js';
 
 let tabs = [];
 let currentTabId = null;
@@ -372,61 +373,79 @@ function restoreAutosavedTabs() {
     const restoredTabs = [];
 
     try {
+        // Check if storage is available
+        if (!StorageUtils.isStorageAvailable()) {
+            logger.warn?.('localStorage not available, cannot restore tabs');
+            return restoredTabs;
+        }
+
         // Look for autosave keys in localStorage
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
+        const allKeys = StorageUtils.keys();
 
+        for (const key of allKeys) {
             if (key && key.startsWith('autosave_tab_') && !key.endsWith('_timestamp')) {
-                const tabId = key.replace('autosave_', '');
-                const autosaveData = Autosave ? Autosave.loadAutosave(tabId) : null;
+                try {
+                    const tabId = key.replace('autosave_', '');
+                    const autosaveData = Autosave ? Autosave.loadAutosave(tabId) : null;
 
-                if (autosaveData && autosaveData.data) {
-                    // Parse the data to get dimensions
-                    const parts = autosaveData.data.split(':');
-                    let dimensions, dataString;
+                    if (autosaveData && autosaveData.data) {
+                        // Parse the data to get dimensions
+                        const parts = autosaveData.data.split(':');
+                        let dimensions, dataString;
 
-                    if (parts[1] === 'RLE') {
-                        // Compressed format: WxH:RLE:DATA
-                        dimensions = parts[0].split('x');
-                        // Decompress to get actual data
-                        const decompressed = Compression.decompress(autosaveData.data);
-                        dataString = decompressed;
-                    } else {
-                        // Standard format: WxH:DATA
-                        dimensions = parts[0].split('x');
-                        dataString = autosaveData.data;
+                        if (parts[1] === 'RLE') {
+                            // Compressed format: WxH:RLE:DATA
+                            dimensions = parts[0].split('x');
+                            // Decompress to get actual data
+                            const decompressed = Compression.decompress(autosaveData.data);
+                            dataString = decompressed;
+                        } else {
+                            // Standard format: WxH:DATA
+                            dimensions = parts[0].split('x');
+                            dataString = autosaveData.data;
+                        }
+
+                        const width = parseInt(dimensions[0]);
+                        const height = parseInt(dimensions[1]);
+
+                        // Validate dimensions
+                        if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+                            logger.warn?.(`Invalid dimensions in autosave ${tabId}, skipping`);
+                            continue;
+                        }
+
+                        // Create tab with restored data
+                        tabCounter++;
+                        const tab = {
+                            id: tabId,
+                            name: `Restored-${tabCounter}`,
+                            width: width,
+                            height: height,
+                            data: dataString,
+                            isDirty: false,
+                            created: autosaveData.timestamp,
+                            modified: autosaveData.timestamp
+                        };
+
+                        tabs.push(tab);
+                        renderTab(tab);
+                        restoredTabs.push(tab);
                     }
-
-                    const width = parseInt(dimensions[0]);
-                    const height = parseInt(dimensions[1]);
-
-                    // Create tab with restored data
-                    tabCounter++;
-                    const tab = {
-                        id: tabId,
-                        name: `Restored-${tabCounter}`,
-                        width: width,
-                        height: height,
-                        data: dataString,
-                        isDirty: false,
-                        created: autosaveData.timestamp,
-                        modified: autosaveData.timestamp
-                    };
-
-                    tabs.push(tab);
-                    renderTab(tab);
-                    restoredTabs.push(tab);
+                } catch (tabError) {
+                    logger.warn?.('Failed to restore individual tab, skipping', tabError);
+                    continue;
                 }
             }
-
-            // Switch to first restored tab
-            if (restoredTabs.length > 0) {
-                switchToTab(restoredTabs[0].id);
-                logger.info(`Restored ${restoredTabs.length} autosaved tab(s)`);
-            }
-        }} catch (error) {
-            logger.error('Failed to restore autosaved tabs:', error);
         }
+
+        // Switch to first restored tab
+        if (restoredTabs.length > 0) {
+            switchToTab(restoredTabs[0].id);
+            logger.info?.(`Restored ${restoredTabs.length} autosaved tab(s)`);
+        }
+    } catch (error) {
+        logger.error?.('Failed to restore autosaved tabs:', error);
+    }
 
     return restoredTabs;
 }

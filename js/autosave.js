@@ -11,6 +11,7 @@
 import logger from './core/Logger.js';
 import TabManager from './tabManager.js';
 import PixelCanvas from './canvas/PixelCanvas.js';
+import StorageUtils from './utils/StorageUtils.js';
 
 let autosaveInterval = null;
 let saveTimeout = null;
@@ -112,8 +113,8 @@ function performSave() {
     // Save to localStorage with tab ID
     try {
         const saveKey = `autosave_${currentTab.id}`;
-        localStorage.setItem(saveKey, dataString);
-        localStorage.setItem(`${saveKey}_timestamp`, Date.now().toString());
+        StorageUtils.setItem(saveKey, dataString);
+        StorageUtils.setItem(`${saveKey}_timestamp`, Date.now().toString());
 
         isDirty = false;
         lastSaveTime = Date.now();
@@ -210,8 +211,8 @@ function startTimeUpdater() {
 function loadAutosave(tabId) {
     try {
         const saveKey = `autosave_${tabId}`;
-        const data = localStorage.getItem(saveKey);
-        const timestamp = localStorage.getItem(`${saveKey}_timestamp`);
+        const data = StorageUtils.getItem(saveKey);
+        const timestamp = StorageUtils.getItem(`${saveKey}_timestamp`);
 
         if (data && timestamp) {
             return {
@@ -232,8 +233,8 @@ function loadAutosave(tabId) {
 function clearAutosave(tabId) {
     try {
         const saveKey = `autosave_${tabId}`;
-        localStorage.removeItem(saveKey);
-        localStorage.removeItem(`${saveKey}_timestamp`);
+        StorageUtils.removeItem(saveKey);
+        StorageUtils.removeItem(`${saveKey}_timestamp`);
     } catch (error) {
         logger.error('Failed to clear autosave:', error);
     }

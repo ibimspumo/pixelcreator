@@ -16,6 +16,7 @@
 
 import logger from './core/Logger.js';
 import Dialogs from './dialogs.js';
+import StorageUtils from './utils/StorageUtils.js';
 
 const STORAGE_KEY = 'pixelart_files';
 let currentFileName = null;
@@ -25,33 +26,31 @@ let currentFileName = null;
  * @returns {Array} Array of file objects
  */
 function getAllFiles() {
-    try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : [];
-    } catch (error) {
-        logger.error('Error reading from LocalStorage:', error);
-        return [];
-    }
+    const files = StorageUtils.getJSON(STORAGE_KEY, []);
+    return files;
 }
 
 /**
  * Save files array to LocalStorage
  * @param {Array} files - Array of file objects
- * @returns {boolean} Success status
+ * @returns {Promise<boolean>} Success status
  */
-function saveAllFiles(files) {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(files));
-        return true;
-    } catch (error) {
-        logger.error('Error saving to LocalStorage:', error);
-        if (Dialogs) {
-            Dialogs.alert('Save Failed', 'Failed to save: Storage quota may be exceeded.', 'error');
+async function saveAllFiles(files) {
+    const success = StorageUtils.setJSON(STORAGE_KEY, files);
+
+    if (!success) {
+        logger.error?.('Error saving to LocalStorage');
+
+        if (StorageUtils.isQuotaExceeded()) {
+            await Dialogs.alert('Storage Full', 'Storage quota exceeded. Please delete some files to free up space.', 'error');
+        } else if (!StorageUtils.isStorageAvailable()) {
+            await Dialogs.alert('Storage Unavailable', 'LocalStorage is not available. Your browser may be in private mode.', 'error');
         } else {
-            alert('Failed to save: Storage quota may be exceeded');
+            await Dialogs.alert('Save Failed', 'Failed to save file. Please try again.', 'error');
         }
-        return false;
     }
+
+    return success;
 }
 
 /**
@@ -241,22 +240,7 @@ function formatDate(timestamp) {
  * @returns {Object} Storage stats {used, total, percentage}
  */
 function getStorageStats() {
-    try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        const used = data ? data.length : 0;
-        const total = 5 * 1024 * 1024; // Approximate 5MB limit for localStorage
-
-        return {
-            used: used,
-            total: total,
-            percentage: (used / total * 100).toFixed(2),
-            usedKB: (used / 1024).toFixed(2),
-            totalMB: (total / 1024 / 1024).toFixed(2)
-        };
-    } catch (error) {
-        logger.error('Error getting storage stats:', error);
-        return null;
-    }
+    return StorageUtils.getStorageStats();
 }
 
 /**
@@ -281,9 +265,9 @@ function showLoadDialog(onSelectCallback) {
     fileList.innerHTML = '';
 
     if (files.length === 0) {
-        noFilesMessage.style.display = 'block';
+        noFilesMessage.classList.remove('hidden');
     } else {
-        noFilesMessage.style.display = 'none';
+        noFilesMessage.classList.add('hidden');
 
         // Sort by timestamp (newest first)
         files.sort((a, b) => b.timestamp - a.timestamp);
@@ -296,11 +280,13 @@ function showLoadDialog(onSelectCallback) {
     }
 
     // Show modal
-    modal.style.display = 'flex';
+    modal.classList.add('flex');
+    modal.classList.remove('hidden');
 
     // Close button handler
     const closeHandler = () => {
-        modal.style.display = 'none';
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         closeBtn.removeEventListener('click', closeHandler);
         modal.removeEventListener('click', outsideClickHandler);
     };
@@ -348,7 +334,9 @@ function createFileItem(file, onSelectCallback) {
     loadBtn.className = 'btn btn-success';
     loadBtn.textContent = 'Load';
     loadBtn.addEventListener('click', () => {
-        document.getElementById('fileModal').style.display = 'none';
+        const modal = document.getElementById('fileModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         onSelectCallback(file);
     });
 
@@ -375,7 +363,10 @@ function createFileItem(file, onSelectCallback) {
                 // Check if no files left
                 const fileListElement = document.getElementById('fileList');
                 if (fileListElement && fileListElement.children.length === 0) {
-                    document.getElementById('noFilesMessage').style.display = 'block';
+                    const noFilesMessage = document.getElementById('noFilesMessage');
+                    if (noFilesMessage) {
+                        noFilesMessage.classList.remove('hidden');
+                    }
                 }
             }
         }

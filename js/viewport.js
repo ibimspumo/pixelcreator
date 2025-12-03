@@ -135,7 +135,7 @@ function handlePanStart(e) {
         isPanning = true;
         lastPanX = e.clientX;
         lastPanY = e.clientY;
-        canvasContainer.style.cursor = 'grabbing';
+        canvasContainer.classList.add('cursor-grabbing');
     }
 }
 
@@ -167,11 +167,12 @@ function handlePanEnd(e) {
         isPanning = false;
 
         // Restore cursor
+        canvasContainer.classList.remove('cursor-grabbing');
         const isHandTool = ToolRegistry && ToolRegistry.getCurrentToolId() === 'hand';
         if (isHandTool) {
-            canvasContainer.style.cursor = 'grab';
+            canvasContainer.classList.add('cursor-grab');
         } else {
-            canvasContainer.style.cursor = '';
+            canvasContainer.classList.remove('cursor-grab');
         }
     }
 }
@@ -187,7 +188,7 @@ function handleKeyboard(e) {
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
             spaceKeyPressed = true;
             if (canvasContainer) {
-                canvasContainer.style.cursor = 'grab';
+                canvasContainer.classList.add('cursor-grab');
             }
         }
     }
@@ -225,9 +226,23 @@ document.addEventListener('keyup', (e) => {
         if (canvasContainer && !isPanning) {
             const isHandTool = ToolRegistry && ToolRegistry.getCurrentToolId() === 'hand';
             if (!isHandTool) {
-                canvasContainer.style.cursor = '';
+                canvasContainer.classList.remove('cursor-grab');
             }
         }
+    }
+});
+
+// Handle window blur to reset space key state
+window.addEventListener('blur', () => {
+    if (spaceKeyPressed) {
+        spaceKeyPressed = false;
+        if (canvasContainer && !isPanning) {
+            const isHandTool = ToolRegistry && ToolRegistry.getCurrentToolId() === 'hand';
+            if (!isHandTool) {
+                canvasContainer.classList.remove('cursor-grab');
+            }
+        }
+        logger.debug?.('Space key state reset due to window blur');
     }
 });
 
