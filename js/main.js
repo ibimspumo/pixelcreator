@@ -531,8 +531,16 @@ function generateFilePreview(dataString) {
     const ctx = canvas.getContext('2d');
 
     // Parse data string
-    const match = dataString.match(/^(\d+)x(\d+):(.+)$/);
+    let parsedData = dataString;
+
+    // Check if compressed, decompress if needed
+    if (Compression && Compression.isCompressed(dataString)) {
+        parsedData = Compression.decompress(dataString);
+    }
+
+    const match = parsedData.match(/^(\d+)x(\d+):(.+)$/);
     if (!match) {
+        // Fallback for invalid data
         canvas.width = 64;
         canvas.height = 64;
         ctx.fillStyle = '#333';
@@ -542,22 +550,9 @@ function generateFilePreview(dataString) {
 
     const width = parseInt(match[1]);
     const height = parseInt(match[2]);
-    let data = match[3];
+    const data = match[3];
 
-    // Handle RLE compression
-    if (data.startsWith('RLE:')) {
-        data = data.substring(4);
-        // Decompress (simple implementation)
-        let decompressed = '';
-        for (let i = 0; i < data.length; i += 3) {
-            const count = parseInt(data.substring(i, i + 2));
-            const char = data[i + 2];
-            decompressed += char.repeat(count);
-        }
-        data = decompressed;
-    }
-
-    // Set canvas size (max 64x64 for preview)
+    // Calculate scale to fit in 64x64
     const scale = Math.min(64 / width, 64 / height);
     canvas.width = Math.floor(width * scale);
     canvas.height = Math.floor(height * scale);
@@ -569,9 +564,14 @@ function generateFilePreview(dataString) {
         for (let x = 0; x < width; x++) {
             const index = y * width + x;
             if (index < data.length) {
-                const colorChar = data[index];
-                const color = getColorFromChar(colorChar);
-                if (color && color !== '#00000000') {
+                const char = data[index];
+                const colorIndex = ColorPalette.getIndexFromChar(char);
+
+                // Skip transparent pixels (0)
+                if (colorIndex === 0) continue;
+
+                const color = ColorPalette.getColor(colorIndex);
+                if (color) {
                     ctx.fillStyle = color;
                     ctx.fillRect(x * scale, y * scale, scale, scale);
                 }
@@ -580,17 +580,6 @@ function generateFilePreview(dataString) {
     }
 
     return canvas;
-}
-
-/**
- * Get color hex from Base64 character
- * @param {string} char - Base64 character
- * @returns {string|null}
- */
-function getColorFromChar(char) {
-    if (!ColorPalette) return null;
-    // Use getColorByChar which is the correct API
-    return ColorPalette.getColorByChar(char);
 }
 
 /**
