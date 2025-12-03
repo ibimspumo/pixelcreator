@@ -22,6 +22,7 @@ import clipboardUtils from './utils/ClipboardUtils.js';
 import Dialogs from './dialogs.js';
 import ColorPalette from './colorPalette.js';
 import PixelCanvas from './canvas/PixelCanvas.js';
+import CanvasRenderer from './canvas/CanvasRenderer.js';
 import ToolRegistry from './tools/ToolRegistry.js';
 import TabManager from './tabManager.js';
 import FileManager from './fileManager.js';
@@ -224,6 +225,9 @@ function setupPropertiesPanel() {
             input.addEventListener('input', updateSizePresetHighlight);
         }
     });
+
+    // Grid toggle
+    bindEvent('gridToggleBtn', handleGridToggle);
 }
 
 /**
@@ -287,6 +291,12 @@ function setupKeyboardShortcuts() {
         if (e.key === 'Escape') {
             e.preventDefault();
             ToolRegistry.clearSelection();
+            return;
+        }
+        // Grid toggle (G key)
+        if (key === 'g' && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+            e.preventDefault();
+            handleGridToggle();
             return;
         }
         if (ToolRegistry && /^[a-z]$/.test(key)) {
@@ -702,6 +712,24 @@ async function handleCopyLiveString() {
     const dataString = PixelCanvas.exportToString();
     const btn = document.getElementById('copyLiveStringBtn');
     await clipboardUtils.copyWithFeedback(dataString, btn);
+}
+
+function handleGridToggle() {
+    const currentState = CanvasRenderer.getGridVisible();
+    const newState = !currentState;
+
+    CanvasRenderer.setGridVisible(newState);
+
+    // Update button icon
+    const btn = document.getElementById('gridToggleBtn');
+    if (btn) {
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+            icon.textContent = newState ? 'grid_on' : 'grid_off';
+        }
+    }
+
+    logger.info?.(`Grid ${newState ? 'enabled' : 'disabled'}`);
 }
 
 async function handleResize() {

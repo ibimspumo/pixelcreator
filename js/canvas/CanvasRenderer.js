@@ -184,6 +184,14 @@ function setGridVisible(visible) {
 }
 
 /**
+ * Get grid visibility
+ * @returns {boolean} Grid visibility
+ */
+function getGridVisible() {
+    return showGrid;
+}
+
+/**
  * Get current pixel size
  * @returns {number} Pixel size
  */
@@ -249,6 +257,7 @@ const CanvasRenderer = {
     render,
     clear,
     setGridVisible,
+    getGridVisible,
     getPixelSize,
     getCanvas,
     getContext,
