@@ -2,11 +2,13 @@
 	/**
 	 * App.svelte - Main Application Entry Point
 	 *
-	 * This is a minimal test entry point for verifying the Svelte 5 setup.
-	 * The full UI will be built incrementally using atomic components.
+	 * Main layout with menu bar, toolbox sidebar, canvas, and properties panel.
+	 * Uses atomic design components for modular UI structure.
 	 */
 	import MenuButton from '$lib/components/ui/atoms/MenuButton.svelte';
 	import CanvasWrapper from '$lib/components/canvas/CanvasWrapper.svelte';
+	import Toolbox from '$lib/components/toolbox/Toolbox.svelte';
+	import ColorPalette from '$lib/components/palette/ColorPalette.svelte';
 	import { editor } from '$lib/stores/editor-simple.svelte.js';
 
 	// Subscribe to stores directly
@@ -46,9 +48,17 @@
 	</header>
 
 	<main class="workspace">
+		<aside class="left-sidebar">
+			<Toolbox />
+		</aside>
+
 		<div class="canvas-container">
 			<CanvasWrapper />
 		</div>
+
+		<aside class="right-sidebar">
+			<ColorPalette />
+		</aside>
 	</main>
 
 	<aside class="info-panel">
@@ -124,19 +134,32 @@
 	}
 
 	.workspace {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		display: grid;
+		grid-template-columns: 280px 1fr 280px;
+		gap: 16px;
 		background: var(--canvas-bg);
-		padding: 24px;
+		padding: 16px;
 		overflow: hidden;
 	}
 
+	.left-sidebar {
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+	}
+
+	.right-sidebar {
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+	}
+
 	.canvas-container {
-		width: 100%;
-		height: 100%;
-		max-width: 1200px;
-		max-height: 800px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 0;
+		min-height: 0;
 	}
 
 	.info-panel {
