@@ -126,12 +126,6 @@ function handleMouseMove(e) {
         triggerRender();
         triggerChange();
     }
-
-    // Update selection preview for select tool
-    const toolId = toolRegistry.getCurrentToolId();
-    if (toolId === 'select' && SelectionOverlay) {
-        SelectionOverlay.renderPreview(coords.x, coords.y);
-    }
 }
 
 /**
@@ -167,12 +161,6 @@ function handleMouseUp(e) {
     if (modified) {
         triggerRender();
         triggerChange();
-    }
-
-    // Update selection overlay for select tool
-    const toolId = toolRegistry.getCurrentToolId();
-    if (toolId === 'select' && SelectionOverlay) {
-        SelectionOverlay.renderPreview();
     }
 }
 
@@ -254,12 +242,8 @@ function getPixelCoordinates(e) {
  * @private
  */
 function handleSelectionChange(bounds) {
-    if (SelectionOverlay) {
-        SelectionOverlay.setSelection(bounds);
-        SelectionOverlay.renderPreview();
-    }
-
-    // Emit event
+    // Selection is now managed by PixelCanvas render loop
+    // Just emit event for other components
     if (eventBus) {
         eventBus.emit(eventBus.Events.SELECTION_CHANGED, bounds);
     }

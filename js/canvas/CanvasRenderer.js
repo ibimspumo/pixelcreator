@@ -15,6 +15,7 @@
 
 import logger from '../core/Logger.js';
 import ColorPalette from '../colorPalette.js';
+import Viewport from '../viewport.js';
 
 let canvas = null;
 let ctx = null;
@@ -225,10 +226,18 @@ function getContext() {
  * @returns {Object|null} {x, y} pixel coordinates or null
  */
 function screenToPixelCoords(screenX, screenY, width, height, zoom = 1.0) {
+    // getBoundingClientRect() already accounts for CSS transforms
     const rect = canvas.getBoundingClientRect();
 
-    const x = Math.floor((screenX - rect.left) / (pixelSize * zoom));
-    const y = Math.floor((screenY - rect.top) / (pixelSize * zoom));
+    // Calculate position relative to canvas (accounting for zoom in rect)
+    const relativeX = screenX - rect.left;
+    const relativeY = screenY - rect.top;
+
+    // Convert to pixel coordinates
+    // rect already includes zoom, so we divide by the displayed size per pixel
+    const displayedPixelSize = rect.width / width;
+    const x = Math.floor(relativeX / displayedPixelSize);
+    const y = Math.floor(relativeY / displayedPixelSize);
 
     if (x >= 0 && x < width && y >= 0 && y < height) {
         return { x, y };

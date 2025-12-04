@@ -27,72 +27,67 @@ class SelectTool extends BaseTool {
         category: 'selection'
     };
 
-    constructor() {
-        super();
-        this.tempSelection = null; // Temp selection during drag
-    }
-
     respectsSelection() {
         return false; // Selection tool doesn't respect its own selection
     }
 
     onDrawStart(x, y, pixelData, context) {
-        // Clamp coordinates to canvas bounds
         const width = pixelData[0].length;
         const height = pixelData.length;
+
+        // Clamp to grid bounds
         const clampedX = Math.max(0, Math.min(x, width - 1));
         const clampedY = Math.max(0, Math.min(y, height - 1));
 
-        // Start new selection
-        this.tempSelection = { x1: clampedX, y1: clampedY, x2: clampedX, y2: clampedY };
-        return false;
+        // Store start and last positions (used by PixelCanvas render loop)
+        this.startX = clampedX;
+        this.startY = clampedY;
+        this.lastX = clampedX;
+        this.lastY = clampedY;
+
+        return false; // No canvas modification
     }
 
     onDrawContinue(x, y, pixelData, context) {
-        // Update temp selection
-        if (this.tempSelection) {
-            // Clamp coordinates to canvas bounds
-            const width = pixelData[0].length;
-            const height = pixelData.length;
-            const clampedX = Math.max(0, Math.min(x, width - 1));
-            const clampedY = Math.max(0, Math.min(y, height - 1));
+        const width = pixelData[0].length;
+        const height = pixelData.length;
 
-            this.tempSelection.x2 = clampedX;
-            this.tempSelection.y2 = clampedY;
-        }
-        return false;
+        // Clamp to grid bounds
+        const clampedX = Math.max(0, Math.min(x, width - 1));
+        const clampedY = Math.max(0, Math.min(y, height - 1));
+
+        // Update last position (used by PixelCanvas render loop)
+        this.lastX = clampedX;
+        this.lastY = clampedY;
+
+        return false; // No canvas modification
     }
 
     onDrawEnd(x, y, pixelData, context) {
-        // Finalize selection
-        if (this.tempSelection) {
-            // Clamp coordinates to canvas bounds
-            const width = pixelData[0].length;
-            const height = pixelData.length;
-            const clampedX = Math.max(0, Math.min(x, width - 1));
-            const clampedY = Math.max(0, Math.min(y, height - 1));
+        const width = pixelData[0].length;
+        const height = pixelData.length;
 
-            const bounds = {
-                x1: Math.min(this.tempSelection.x1, clampedX),
-                y1: Math.min(this.tempSelection.y1, clampedY),
-                x2: Math.max(this.tempSelection.x1, clampedX),
-                y2: Math.max(this.tempSelection.y1, clampedY)
-            };
+        // Clamp to grid bounds
+        const clampedX = Math.max(0, Math.min(x, width - 1));
+        const clampedY = Math.max(0, Math.min(y, height - 1));
 
-            // Set selection bounds
-            this.setSelection(bounds);
-            this.tempSelection = null;
+        // Finalize selection - normalize bounds
+        const bounds = {
+            x1: Math.min(this.startX, clampedX),
+            y1: Math.min(this.startY, clampedY),
+            x2: Math.max(this.startX, clampedX),
+            y2: Math.max(this.startY, clampedY)
+        };
 
-            // Notify for overlay update
-            if (context.onSelectionChange) {
-                context.onSelectionChange(bounds);
-            }
+        // Set selection bounds (from BaseTool)
+        this.setSelection(bounds);
+
+        // Notify for overlay update
+        if (context.onSelectionChange) {
+            context.onSelectionChange(bounds);
         }
-        return false;
-    }
 
-    onDrawCancel() {
-        this.tempSelection = null;
+        return false; // No canvas modification
     }
 
     /**
@@ -100,22 +95,18 @@ class SelectTool extends BaseTool {
      * @returns {Object|null} Selection data
      */
     getSelectionData() {
-        if (this.tempSelection) {
-            // Adjust bounds to always be positive width/height for external consumers
-            const x1 = Math.min(this.tempSelection.x1, this.tempSelection.x2);
-            const y1 = Math.min(this.tempSelection.y1, this.tempSelection.y2);
-            const x2 = Math.max(this.tempSelection.x1, this.tempSelection.x2);
-            const y2 = Math.max(this.tempSelection.y1, this.tempSelection.y2);
-
+        if (this.isDrawing) {
+            // During drawing - normalize for rendering
             return {
                 active: true,
                 isDrawing: true,
-                x1: x1,
-                y1: y1,
-                x2: x2,
-                y2: y2
+                x1: Math.min(this.startX, this.lastX),
+                y1: Math.min(this.startY, this.lastY),
+                x2: Math.max(this.startX, this.lastX),
+                y2: Math.max(this.startY, this.lastY)
             };
         } else if (this.selectionActive && this.selectionBounds) {
+            // Finalized selection
             return {
                 active: true,
                 isDrawing: false,

@@ -46,16 +46,22 @@ function createOverlay() {
 
     overlayCanvas = document.createElement('canvas');
     overlayCanvas.className = 'selection-overlay';
+
+    // Get the main canvas position
+    const mainRect = mainCanvas.getBoundingClientRect();
+
     Object.assign(overlayCanvas.style, {
-        position: 'absolute',
-        top: '0',
-        left: '0',
+        position: 'fixed', // Use fixed positioning to match getBoundingClientRect coordinates
+        top: mainRect.top + 'px',
+        left: mainRect.left + 'px',
         pointerEvents: 'none',
         zIndex: '10'
     });
 
     overlayCtx = overlayCanvas.getContext('2d');
-    mainCanvas.parentElement.appendChild(overlayCanvas);
+
+    // Append to body so it's not affected by parent transforms
+    document.body.appendChild(overlayCanvas);
     updateSize();
 }
 
@@ -64,12 +70,19 @@ function createOverlay() {
  */
 function updateSize() {
     if (!overlayCanvas || !mainCanvas) return;
-    overlayCanvas.width = mainCanvas.width;
-    overlayCanvas.height = mainCanvas.height;
-    Object.assign(overlayCanvas.style, {
-        width: mainCanvas.style.width,
-        height: mainCanvas.style.height
-    });
+
+    // Get the ACTUAL displayed size and position of the main canvas
+    const mainRect = mainCanvas.getBoundingClientRect();
+
+    // Set overlay canvas internal resolution to match displayed size
+    overlayCanvas.width = mainRect.width;
+    overlayCanvas.height = mainRect.height;
+
+    // Set overlay CSS size and position to match main canvas exactly
+    overlayCanvas.style.width = mainRect.width + 'px';
+    overlayCanvas.style.height = mainRect.height + 'px';
+    overlayCanvas.style.top = mainRect.top + 'px';
+    overlayCanvas.style.left = mainRect.left + 'px';
 }
 
 /**
@@ -82,6 +95,9 @@ function updateSize() {
  */
 function render(selectionState, dashOffset = 0) {
     if (!overlayCanvas || !overlayCtx || !renderer) return;
+
+    // Update overlay size every frame to match current display size
+    updateSize();
 
     clear();
 
@@ -115,23 +131,30 @@ function render(selectionState, dashOffset = 0) {
  */
 function renderMovePreview(movePreview) {
     const { pixelData, x, y } = movePreview;
-    const pixelSize = renderer.getPixelSize();
+    const mainRect = mainCanvas.getBoundingClientRect();
+    const overlayRect = overlayCanvas.getBoundingClientRect();
     const colors = renderer.getColors();
+
+    const gridWidth = mainCanvas.width / renderer.getPixelSize();
+    const displayedPixelSize = mainRect.width / gridWidth;
+
+    overlayCtx.save();
 
     for (let j = 0; j < pixelData.length; j++) {
         for (let i = 0; i < pixelData[j].length; i++) {
             const colorIndex = pixelData[j][i];
-            if (colorIndex !== 0) { // Assuming 0 is transparent
+            if (colorIndex !== 0) {
                 overlayCtx.fillStyle = colors[colorIndex];
                 overlayCtx.fillRect(
-                    Math.floor((x + i) * pixelSize),
-                    Math.floor((y + j) * pixelSize),
-                    pixelSize,
-                    pixelSize
+                    (x + i) * displayedPixelSize,
+                    (y + j) * displayedPixelSize,
+                    displayedPixelSize,
+                    displayedPixelSize
                 );
             }
         }
     }
+    overlayCtx.restore();
 }
 
 /**
@@ -140,23 +163,43 @@ function renderMovePreview(movePreview) {
  * @param {number} dashOffset - The animation offset.
  */
 function drawMarchingAnts(bounds, dashOffset) {
-    const pixelSize = renderer.getPixelSize();
-    const rect = {
-        x: Math.floor(bounds.x1 * pixelSize),
-        y: Math.floor(bounds.y1 * pixelSize),
-        w: Math.floor((bounds.x2 - bounds.x1 + 1) * pixelSize),
-        h: Math.floor((bounds.y2 - bounds.y1 + 1) * pixelSize)
-    };
+    // Use the ACTUAL displayed canvas size, not the internal pixelSize!
+    // The canvas element's width/height are the internal resolution,
+    // but getBoundingClientRect gives us the displayed size after CSS transforms
+    const mainRect = mainCanvas.getBoundingClientRect();
+    const overlayRect = overlayCanvas.getBoundingClientRect();
 
+    // Get the grid dimensions
+    const gridWidth = mainCanvas.width / renderer.getPixelSize();
+    const gridHeight = mainCanvas.height / renderer.getPixelSize();
+
+    // Calculate the ACTUAL displayed pixel size
+    const displayedPixelSize = mainRect.width / gridWidth;
+
+    // Calculate bounds using displayed size
+    const x = bounds.x1 * displayedPixelSize;
+    const y = bounds.y1 * displayedPixelSize;
+    const w = (bounds.x2 - bounds.x1 + 1) * displayedPixelSize;
+    const h = (bounds.y2 - bounds.y1 + 1) * displayedPixelSize;
+
+    // Save context state
+    overlayCtx.save();
+    overlayCtx.imageSmoothingEnabled = false;
+
+    // Draw white dashes
     overlayCtx.strokeStyle = '#FFFFFF';
     overlayCtx.lineWidth = 1;
     overlayCtx.setLineDash([4, 4]);
     overlayCtx.lineDashOffset = dashOffset;
-    overlayCtx.strokeRect(rect.x - 1, rect.y - 1, rect.w + 2, rect.h + 2);
-    
+    overlayCtx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+    // Draw black dashes (offset by 4 for marching effect)
     overlayCtx.strokeStyle = '#000000';
     overlayCtx.lineDashOffset = dashOffset + 4;
-    overlayCtx.strokeRect(rect.x - 1, rect.y - 1, rect.w + 2, rect.h + 2);
+    overlayCtx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+    // Restore context state
+    overlayCtx.restore();
 }
 
 /**
@@ -164,18 +207,26 @@ function drawMarchingAnts(bounds, dashOffset) {
  * @param {Object} bounds - The preview bounds {x1, y1, x2, y2}.
  */
 function drawSelectionPreview(bounds) {
-    const pixelSize = renderer.getPixelSize();
-    const rect = {
-        x: Math.floor(bounds.x1 * pixelSize),
-        y: Math.floor(bounds.y1 * pixelSize),
-        w: Math.floor((bounds.x2 - bounds.x1 + 1) * pixelSize),
-        h: Math.floor((bounds.y2 - bounds.y1 + 1) * pixelSize)
-    };
+    const mainRect = mainCanvas.getBoundingClientRect();
+    const overlayRect = overlayCanvas.getBoundingClientRect();
+
+    const gridWidth = mainCanvas.width / renderer.getPixelSize();
+    const gridHeight = mainCanvas.height / renderer.getPixelSize();
+    const displayedPixelSize = mainRect.width / gridWidth;
+
+    const x = bounds.x1 * displayedPixelSize;
+    const y = bounds.y1 * displayedPixelSize;
+    const w = (bounds.x2 - bounds.x1 + 1) * displayedPixelSize;
+    const h = (bounds.y2 - bounds.y1 + 1) * displayedPixelSize;
+
+    overlayCtx.save();
+    overlayCtx.imageSmoothingEnabled = false;
 
     overlayCtx.strokeStyle = 'rgba(0, 191, 255, 0.8)';
     overlayCtx.lineWidth = 1;
     overlayCtx.setLineDash([3, 3]);
-    overlayCtx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+    overlayCtx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    overlayCtx.restore();
 }
 
 /**
