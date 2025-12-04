@@ -32,6 +32,7 @@ import History from './history.js';
 import Compression from './compression.js';
 import PNGExport from './pngExport.js';
 import ContextMenu from './contextMenu.js';
+import LayerUI from './layerUI.js';
 
 // Tool Implementations
 import BrushTool from './tools/implementations/BrushTool.js';
@@ -101,6 +102,7 @@ async function initializeCoreSystems() {
     Viewport.init();
     History.init({ onHistoryChange: updateHistoryUI });
     ContextMenu.init();
+    LayerUI.init();
 
     logger.info('Core systems initialized');
 }

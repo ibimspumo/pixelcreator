@@ -82,7 +82,8 @@ function handleMouseDown(e) {
     const coords = getPixelCoordinates(e);
     if (!coords) return;
 
-    const data = pixelData.getData();
+    // Use active layer data for tools to modify
+    const data = pixelData.getActiveLayerData();
     const colorIndex = colorPalette ? colorPalette.getCurrentColorIndex() : 1;
 
     const context = {
@@ -113,7 +114,8 @@ function handleMouseMove(e) {
     const coords = getPixelCoordinates(e);
     if (!coords) return;
 
-    const data = pixelData.getData();
+    // Use active layer data for tools to modify
+    const data = pixelData.getActiveLayerData();
     const colorIndex = colorPalette ? colorPalette.getCurrentColorIndex() : 1;
 
     const context = {
@@ -141,7 +143,7 @@ function handleMouseUp(e) {
     isDrawing = false;
 
     const coords = getPixelCoordinates(e);
-    const data = pixelData.getData();
+    const data = pixelData.getActiveLayerData();
     const colorIndex = colorPalette ? colorPalette.getCurrentColorIndex() : 1;
 
     const context = {

@@ -17,10 +17,12 @@ import logger from '../core/Logger.js';
 import Compression from '../compression.js';
 import ValidationUtils from '../utils/ValidationUtils.js';
 import ColorPalette from '../colorPalette.js';
+import LayerManager from '../layerManager.js';
 
 let width = 16;
 let height = 16;
-let data = []; // 2D array of color indices (0-63)
+let data = []; // 2D array of color indices (0-63) - DEPRECATED, use LayerManager
+let useLayerSystem = true; // Flag to enable/disable layer system
 
 /**
  * Initialize pixel data
@@ -30,8 +32,16 @@ let data = []; // 2D array of color indices (0-63)
 function init(w, h) {
     width = w;
     height = h;
-    clear();
-    logger.debug?.(`PixelData initialized: ${width}×${height}`);
+
+    if (useLayerSystem) {
+        // Initialize LayerManager with default layer
+        LayerManager.init(w, h);
+    } else {
+        // Fallback: use old data array
+        clear();
+    }
+
+    logger.debug?.(`PixelData initialized: ${width}×${height} (layers: ${useLayerSystem})`);
 }
 
 /**
@@ -52,6 +62,22 @@ function clear() {
  * @returns {Array<Array<number>>} 2D array of color indices
  */
 function getData() {
+    if (useLayerSystem) {
+        // Return composited view of all visible layers
+        return LayerManager.compositeAllLayers();
+    }
+    return data;
+}
+
+/**
+ * Get active layer data (for tools to modify)
+ * @returns {Array<Array<number>>} Active layer's pixel data
+ */
+function getActiveLayerData() {
+    if (useLayerSystem) {
+        const activeLayer = LayerManager.getActiveLayer();
+        return activeLayer ? activeLayer.data : getData();
+    }
     return data;
 }
 
@@ -282,6 +308,7 @@ const PixelData = {
     init,
     clear,
     getData,
+    getActiveLayerData,
     setData,
     getDimensions,
     getPixel,
