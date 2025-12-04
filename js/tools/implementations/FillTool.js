@@ -72,11 +72,8 @@ class FillTool extends BaseTool {
         const stack = [[x, y]];
         const visited = new Set();
         let modified = false;
-        let iterations = 0;
-        const maxIterations = width * height; // Safety limit
 
-        while (stack.length > 0 && iterations < maxIterations) {
-            iterations++;
+        while (stack.length > 0) {
             const [cx, cy] = stack.pop();
 
             // Create unique key for visited tracking
@@ -110,10 +107,6 @@ class FillTool extends BaseTool {
             stack.push([cx - 1, cy]);
             stack.push([cx, cy + 1]);
             stack.push([cx, cy - 1]);
-        }
-
-        if (iterations >= maxIterations) {
-            this.logger.warn?.('Flood fill reached iteration limit');
         }
 
         return modified;

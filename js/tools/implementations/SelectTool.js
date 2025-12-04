@@ -37,16 +37,28 @@ class SelectTool extends BaseTool {
     }
 
     onDrawStart(x, y, pixelData, context) {
+        // Clamp coordinates to canvas bounds
+        const width = pixelData[0].length;
+        const height = pixelData.length;
+        const clampedX = Math.max(0, Math.min(x, width - 1));
+        const clampedY = Math.max(0, Math.min(y, height - 1));
+
         // Start new selection
-        this.tempSelection = { x1: x, y1: y, x2: x, y2: y };
+        this.tempSelection = { x1: clampedX, y1: clampedY, x2: clampedX, y2: clampedY };
         return false;
     }
 
     onDrawContinue(x, y, pixelData, context) {
         // Update temp selection
         if (this.tempSelection) {
-            this.tempSelection.x2 = x;
-            this.tempSelection.y2 = y;
+            // Clamp coordinates to canvas bounds
+            const width = pixelData[0].length;
+            const height = pixelData.length;
+            const clampedX = Math.max(0, Math.min(x, width - 1));
+            const clampedY = Math.max(0, Math.min(y, height - 1));
+
+            this.tempSelection.x2 = clampedX;
+            this.tempSelection.y2 = clampedY;
         }
         return false;
     }
@@ -54,11 +66,17 @@ class SelectTool extends BaseTool {
     onDrawEnd(x, y, pixelData, context) {
         // Finalize selection
         if (this.tempSelection) {
+            // Clamp coordinates to canvas bounds
+            const width = pixelData[0].length;
+            const height = pixelData.length;
+            const clampedX = Math.max(0, Math.min(x, width - 1));
+            const clampedY = Math.max(0, Math.min(y, height - 1));
+
             const bounds = {
-                x1: Math.min(this.tempSelection.x1, x),
-                y1: Math.min(this.tempSelection.y1, y),
-                x2: Math.max(this.tempSelection.x1, x),
-                y2: Math.max(this.tempSelection.y1, y)
+                x1: Math.min(this.tempSelection.x1, clampedX),
+                y1: Math.min(this.tempSelection.y1, clampedY),
+                x2: Math.max(this.tempSelection.x1, clampedX),
+                y2: Math.max(this.tempSelection.y1, clampedY)
             };
 
             // Set selection bounds
