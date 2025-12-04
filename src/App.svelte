@@ -6,6 +6,7 @@
 	 * The full UI will be built incrementally using atomic components.
 	 */
 	import MenuButton from '$lib/components/ui/atoms/MenuButton.svelte';
+	import CanvasWrapper from '$lib/components/canvas/CanvasWrapper.svelte';
 	import { editor } from '$lib/stores/editor-simple.svelte.js';
 
 	// Subscribe to stores directly
@@ -45,9 +46,8 @@
 	</header>
 
 	<main class="workspace">
-		<div class="canvas-placeholder">
-			<p>Canvas will render here</p>
-			<p>✨ Svelte 5 Setup Complete ✨</p>
+		<div class="canvas-container">
+			<CanvasWrapper />
 		</div>
 	</main>
 
@@ -132,16 +132,11 @@
 		overflow: hidden;
 	}
 
-	.canvas-placeholder {
+	.canvas-container {
 		width: 100%;
 		height: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 16px;
-		font-size: 20px;
-		color: var(--text-secondary);
+		max-width: 1200px;
+		max-height: 800px;
 	}
 
 	.info-panel {
