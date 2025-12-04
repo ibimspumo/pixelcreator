@@ -14,6 +14,7 @@
 import logger from './core/Logger.js';
 import Dialogs from './dialogs.js';
 import PixelCanvas from './canvas/PixelCanvas.js';
+import PixelData from './canvas/PixelData.js';
 import Autosave from './autosave.js';
 import Compression from './compression.js';
 import StorageUtils from './utils/StorageUtils.js';
@@ -172,6 +173,11 @@ function switchToTab(tabId) {
     document.querySelectorAll('.tab').forEach(el => {
         el.classList.toggle('active', el.dataset.tabId === tabId);
     });
+
+    // Enable layer system when switching to a tab (file is now active)
+    if (PixelData) {
+        PixelData.enableLayerSystem(tab.width, tab.height);
+    }
 
     // Load tab data into canvas
     if (PixelCanvas) {

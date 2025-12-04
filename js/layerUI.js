@@ -45,8 +45,8 @@ function init() {
     eventBus.on('layer:activeChanged', render);
     eventBus.on('layer:moved', render);
 
-    // Initial render
-    render();
+    // Don't render initially - wait for file to be created/loaded
+    // render();
 
     logger.info?.('LayerUI initialized');
 }

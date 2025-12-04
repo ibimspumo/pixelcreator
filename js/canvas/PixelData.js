@@ -22,7 +22,8 @@ import LayerManager from '../layerManager.js';
 let width = 16;
 let height = 16;
 let data = []; // 2D array of color indices (0-63) - DEPRECATED, use LayerManager
-let useLayerSystem = true; // Flag to enable/disable layer system
+let useLayerSystem = false; // Flag to enable/disable layer system - starts disabled
+let layerSystemInitialized = false;
 
 /**
  * Initialize pixel data
@@ -33,15 +34,28 @@ function init(w, h) {
     width = w;
     height = h;
 
-    if (useLayerSystem) {
-        // Initialize LayerManager with default layer
-        LayerManager.init(w, h);
-    } else {
-        // Fallback: use old data array
-        clear();
-    }
+    // Don't initialize layers yet - wait for file creation/loading
+    // Just initialize with empty data array
+    clear();
 
-    logger.debug?.(`PixelData initialized: ${width}×${height} (layers: ${useLayerSystem})`);
+    logger.debug?.(`PixelData initialized: ${width}×${height}`);
+}
+
+/**
+ * Enable and initialize layer system
+ * Called when creating or loading a file
+ * @param {number} w - Width
+ * @param {number} h - Height
+ */
+function enableLayerSystem(w, h) {
+    if (!layerSystemInitialized) {
+        width = w;
+        height = h;
+        LayerManager.init(w, h);
+        useLayerSystem = true;
+        layerSystemInitialized = true;
+        logger.info?.(`Layer system enabled: ${width}×${height}`);
+    }
 }
 
 /**
@@ -306,6 +320,7 @@ function getStats() {
 
 const PixelData = {
     init,
+    enableLayerSystem,
     clear,
     getData,
     getActiveLayerData,
