@@ -86,6 +86,14 @@ function createLayer(name = 'Layer', width, height, initialData = null) {
  * @returns {Array<Array<number>>} Empty 2D array
  */
 function createEmptyData(width, height) {
+    // Validate dimensions
+    if (!width || !height || width <= 0 || height <= 0) {
+        logger.error?.(`Invalid dimensions for createEmptyData: ${width}x${height}`);
+        // Use fallback dimensions
+        width = canvasWidth || 16;
+        height = canvasHeight || 16;
+    }
+
     const data = [];
     for (let y = 0; y < height; y++) {
         data[y] = [];

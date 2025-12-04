@@ -155,17 +155,27 @@ function createLayerItem(layer, isActive) {
  */
 function createLayerPreview(layer) {
     const canvas = document.createElement('canvas');
+
+    // Validate layer data
+    if (!layer || !layer.data || !Array.isArray(layer.data)) {
+        logger.warn?.('Invalid layer data for preview');
+        canvas.width = 16;
+        canvas.height = 16;
+        return canvas;
+    }
+
     const width = layer.data[0]?.length || 0;
     const height = layer.data.length || 0;
 
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = width || 16;
+    canvas.height = height || 16;
 
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
     // Draw layer pixels
     for (let y = 0; y < height; y++) {
+        if (!layer.data[y]) continue; // Skip if row doesn't exist
         for (let x = 0; x < width; x++) {
             const colorIndex = layer.data[y][x];
             if (colorIndex !== 0) {
