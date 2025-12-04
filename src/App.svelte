@@ -9,6 +9,7 @@
 	import CanvasWrapper from '$lib/components/canvas/CanvasWrapper.svelte';
 	import Toolbox from '$lib/components/toolbox/Toolbox.svelte';
 	import ColorPalette from '$lib/components/palette/ColorPalette.svelte';
+	import PropertiesPanel from '$lib/components/properties/PropertiesPanel.svelte';
 	import { editor } from '$lib/stores/editor-simple.svelte.js';
 
 	// Subscribe to stores directly
@@ -57,6 +58,7 @@
 		</div>
 
 		<aside class="right-sidebar">
+			<PropertiesPanel />
 			<ColorPalette />
 		</aside>
 	</main>
@@ -151,6 +153,7 @@
 	.right-sidebar {
 		display: flex;
 		flex-direction: column;
+		gap: 16px;
 		overflow-y: auto;
 	}
 
