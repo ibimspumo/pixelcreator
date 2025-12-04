@@ -8,6 +8,7 @@
 	import MenuButton from '$lib/components/ui/atoms/MenuButton.svelte';
 	import HistoryControls from '$lib/components/ui/molecules/HistoryControls.svelte';
 	import ZoomControls from '$lib/components/ui/molecules/ZoomControls.svelte';
+	import CanvasSizeDialog from '$lib/components/ui/molecules/CanvasSizeDialog.svelte';
 	import CanvasWrapper from '$lib/components/canvas/CanvasWrapper.svelte';
 	import Toolbox from '$lib/components/toolbox/Toolbox.svelte';
 	import ColorPalette from '$lib/components/palette/ColorPalette.svelte';
@@ -18,6 +19,9 @@
 	const canvasStore = editor.canvas;
 	const toolStore = editor.tool;
 	const fileStore = editor.file;
+
+	// Dialog states
+	let resizeDialogOpen = false;
 
 	function handleNew() {
 		editor.canvas.clear();
@@ -30,6 +34,10 @@
 		console.log('Save clicked');
 	}
 
+	function handleResize() {
+		resizeDialogOpen = true;
+	}
+
 	function handleGridToggle() {
 		editor.canvas.toggleGrid();
 	}
@@ -40,6 +48,7 @@
 		<div class="menu-section">
 			<MenuButton icon="FileText" label="New" shortcut="Ctrl+N" onclick={handleNew} />
 			<MenuButton icon="Save" label="Save" shortcut="Ctrl+S" onclick={handleSave} />
+			<MenuButton icon="Maximize2" label="Resize" onclick={handleResize} />
 		</div>
 
 		<div class="menu-section">
@@ -93,6 +102,9 @@
 
 		<ZoomControls />
 	</aside>
+
+	<!-- Dialogs -->
+	<CanvasSizeDialog open={resizeDialogOpen} onclose={() => (resizeDialogOpen = false)} />
 </div>
 
 <style>
