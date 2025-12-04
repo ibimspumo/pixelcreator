@@ -7,6 +7,7 @@
 	 */
 	import MenuButton from '$lib/components/ui/atoms/MenuButton.svelte';
 	import HistoryControls from '$lib/components/ui/molecules/HistoryControls.svelte';
+	import ZoomControls from '$lib/components/ui/molecules/ZoomControls.svelte';
 	import CanvasWrapper from '$lib/components/canvas/CanvasWrapper.svelte';
 	import Toolbox from '$lib/components/toolbox/Toolbox.svelte';
 	import ColorPalette from '$lib/components/palette/ColorPalette.svelte';
@@ -87,6 +88,10 @@
 			<span class="info-label">Tool:</span>
 			<span class="info-value">{$toolStore.currentToolId}</span>
 		</div>
+
+		<div class="info-spacer"></div>
+
+		<ZoomControls />
 	</aside>
 </div>
 
@@ -186,6 +191,10 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+	}
+
+	.info-spacer {
+		flex: 1;
 	}
 
 	.info-label {
