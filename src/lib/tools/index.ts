@@ -23,6 +23,8 @@ export { toolStateManager } from './state/ToolStateManager.svelte';
 // Utils
 export { resolveIcon } from './utils/iconResolver.svelte';
 export { searchTools, filterByCategory, filterByTags, getAllTags } from './utils/toolSearch';
+export { performanceMonitor, PERFORMANCE_METRICS, measured } from './utils/performanceMonitor';
+export type { PerformanceMetric, PerformanceStats } from './utils/performanceMonitor';
 
 // Mixins
 export { compose } from './mixins';

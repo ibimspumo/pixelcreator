@@ -43,6 +43,11 @@ export class ToolStateManager {
 	private recentTools = $state<string[]>([]);
 	private maxRecentTools = 5;
 
+	// Debounced persistence
+	private persistTimeout: ReturnType<typeof setTimeout> | null = null;
+	private preferencesTimeout: ReturnType<typeof setTimeout> | null = null;
+	private persistDelay = 300; // ms
+
 	/**
 	 * Initialize the state manager (call once on app startup)
 	 */
@@ -218,9 +223,24 @@ export class ToolStateManager {
 	}
 
 	/**
-	 * Persist states to localStorage
+	 * Persist states to localStorage (debounced)
 	 */
 	private persistToStorage(): void {
+		// Clear existing timeout
+		if (this.persistTimeout) {
+			clearTimeout(this.persistTimeout);
+		}
+
+		// Schedule persistence
+		this.persistTimeout = setTimeout(() => {
+			this.persistToStorageImmediate();
+		}, this.persistDelay);
+	}
+
+	/**
+	 * Persist states to localStorage immediately (no debounce)
+	 */
+	private persistToStorageImmediate(): void {
 		try {
 			const serialized: Record<string, any> = {};
 
@@ -287,10 +307,25 @@ export class ToolStateManager {
 				} as ToolState);
 			});
 
-			this.persistToStorage();
+			this.persistToStorageImmediate(); // Immediate on import
 		} catch (error) {
 			console.error('Failed to import tool states:', error);
 			throw error;
+		}
+	}
+
+	/**
+	 * Flush all pending persistence operations immediately
+	 */
+	flush(): void {
+		if (this.persistTimeout) {
+			clearTimeout(this.persistTimeout);
+			this.persistToStorageImmediate();
+		}
+
+		if (this.preferencesTimeout) {
+			clearTimeout(this.preferencesTimeout);
+			this.persistPreferencesImmediate();
 		}
 	}
 
@@ -299,6 +334,9 @@ export class ToolStateManager {
 	 */
 	clearStorage(): void {
 		try {
+			// Flush pending operations first
+			this.flush();
+
 			localStorage.removeItem(this.storageKey);
 			localStorage.removeItem(this.preferencesKey);
 			this.states.clear();
@@ -310,9 +348,24 @@ export class ToolStateManager {
 	}
 
 	/**
-	 * Persist preferences (favorites, recent tools) to localStorage
+	 * Persist preferences (favorites, recent tools) to localStorage (debounced)
 	 */
 	private persistPreferences(): void {
+		// Clear existing timeout
+		if (this.preferencesTimeout) {
+			clearTimeout(this.preferencesTimeout);
+		}
+
+		// Schedule persistence
+		this.preferencesTimeout = setTimeout(() => {
+			this.persistPreferencesImmediate();
+		}, this.persistDelay);
+	}
+
+	/**
+	 * Persist preferences to localStorage immediately (no debounce)
+	 */
+	private persistPreferencesImmediate(): void {
 		try {
 			const preferences = {
 				favorites: Array.from(this.favorites),
