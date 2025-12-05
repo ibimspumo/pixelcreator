@@ -24,13 +24,13 @@ class PencilTool extends BaseTool {
 		order: 1,
 
 		// Extended configuration
-		version: '1.1.0',
+		version: '1.2.0',
 		author: 'inline.px',
 		license: 'MIT',
 		tags: ['drawing', 'basic', 'pixel', 'freehand'],
 
 		// Tool options
-		options: [commonToolOptions.brushSize],
+		options: [commonToolOptions.brushSize, commonToolOptions.snapToGrid, commonToolOptions.gridSize],
 
 		// Documentation
 		documentation: {
@@ -59,14 +59,23 @@ class PencilTool extends BaseTool {
 	 * Respects brush size option for multi-pixel drawing
 	 */
 	private drawPixel(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
-		const { x, y, button } = mouseContext;
+		let { x, y } = mouseContext;
+		const { button } = mouseContext;
 		const { colors, setPixel, requestRedraw, canvas, state } = toolContext;
+
+		// Get tool options
+		const brushSize = state.getToolOption<number>(this.config.id, 'brushSize') ?? 1;
+		const snapToGrid = state.getToolOption<boolean>(this.config.id, 'snapToGrid') ?? false;
+		const gridSize = state.getToolOption<number>(this.config.id, 'gridSize') ?? 8;
+
+		// Apply grid snapping if enabled
+		if (snapToGrid) {
+			x = Math.floor(x / gridSize) * gridSize;
+			y = Math.floor(y / gridSize) * gridSize;
+		}
 
 		// Use primary color for left click, secondary for right click
 		const colorIndex = button === 2 ? colors.secondaryColorIndex : colors.primaryColorIndex;
-
-		// Get brush size from tool state (defaults to 1)
-		const brushSize = state.getToolOption<number>(this.config.id, 'brushSize') ?? 1;
 
 		// Calculate brush radius (brush size 1 = single pixel, size 2 = 2x2, etc.)
 		const radius = Math.floor(brushSize / 2);

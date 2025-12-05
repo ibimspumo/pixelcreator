@@ -22,11 +22,11 @@ class EraserTool extends BaseTool {
 		supportsDrag: true,
 		worksOnLockedLayers: false,
 		order: 2,
-		version: '1.1.0',
+		version: '1.2.0',
 		author: 'inline.px',
 		license: 'MIT',
 		tags: ['drawing', 'erase', 'transparent'],
-		options: [commonToolOptions.brushSize]
+		options: [commonToolOptions.brushSize, commonToolOptions.snapToGrid, commonToolOptions.gridSize]
 	};
 
 	onMouseDown(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
@@ -42,11 +42,19 @@ class EraserTool extends BaseTool {
 	 * Respects brush size option for erasing multiple pixels
 	 */
 	private erasePixel(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
-		const { x, y } = mouseContext;
+		let { x, y } = mouseContext;
 		const { setPixel, requestRedraw, canvas, state } = toolContext;
 
-		// Get brush size from tool state (defaults to 1)
+		// Get tool options
 		const brushSize = state.getToolOption<number>(this.config.id, 'brushSize') ?? 1;
+		const snapToGrid = state.getToolOption<boolean>(this.config.id, 'snapToGrid') ?? false;
+		const gridSize = state.getToolOption<number>(this.config.id, 'gridSize') ?? 8;
+
+		// Apply grid snapping if enabled
+		if (snapToGrid) {
+			x = Math.floor(x / gridSize) * gridSize;
+			y = Math.floor(y / gridSize) * gridSize;
+		}
 
 		// Calculate brush radius (brush size 1 = single pixel, size 2 = 2x2, etc.)
 		const radius = Math.floor(brushSize / 2);

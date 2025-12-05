@@ -22,11 +22,11 @@ class BucketTool extends BaseTool {
 		supportsDrag: false,
 		worksOnLockedLayers: false,
 		order: 3,
-		version: '1.1.0',
+		version: '1.2.0',
 		author: 'inline.px',
 		license: 'MIT',
-		tags: ['fill', 'paint', 'flood-fill'],
-		options: [commonToolOptions.tolerance, commonToolOptions.contiguous]
+		tags: ['fill', 'paint', 'flood-fill', 'pattern'],
+		options: [commonToolOptions.tolerance, commonToolOptions.contiguous, commonToolOptions.pattern]
 	};
 
 	onClick(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
@@ -36,6 +36,7 @@ class BucketTool extends BaseTool {
 		// Get tool options
 		const tolerance = state.getToolOption<number>(this.config.id, 'tolerance') ?? 0;
 		const contiguous = state.getToolOption<boolean>(this.config.id, 'contiguous') ?? true;
+		const pattern = state.getToolOption<string>(this.config.id, 'pattern') ?? 'solid';
 
 		// Use primary color for left click, secondary for right click
 		const fillColorIndex = button === 2 ? colors.secondaryColorIndex : colors.primaryColorIndex;
@@ -44,15 +45,15 @@ class BucketTool extends BaseTool {
 		const targetColorIndex = getPixel(x, y);
 
 		// If the fill color is the same as the target color, no need to fill
-		if (targetColorIndex === fillColorIndex) {
+		if (targetColorIndex === fillColorIndex && pattern === 'solid') {
 			return false;
 		}
 
 		// Perform flood fill
 		if (contiguous) {
-			this.floodFill(x, y, targetColorIndex, fillColorIndex, tolerance, canvas, setPixel, getPixel);
+			this.floodFill(x, y, targetColorIndex, fillColorIndex, tolerance, pattern, canvas, setPixel, getPixel);
 		} else {
-			this.globalFill(targetColorIndex, fillColorIndex, tolerance, canvas, setPixel, getPixel);
+			this.globalFill(targetColorIndex, fillColorIndex, tolerance, pattern, canvas, setPixel, getPixel);
 		}
 		requestRedraw();
 
@@ -68,6 +69,7 @@ class BucketTool extends BaseTool {
 		targetColor: number,
 		fillColor: number,
 		tolerance: number,
+		pattern: string,
 		canvas: { width: number; height: number },
 		setPixel: (x: number, y: number, colorIndex: number) => void,
 		getPixel: (x: number, y: number) => number
@@ -91,8 +93,10 @@ class BucketTool extends BaseTool {
 			const currentColor = getPixel(x, y);
 			if (!this.colorMatches(currentColor, targetColor, tolerance)) continue;
 
-			// Fill this pixel
-			setPixel(x, y, fillColor);
+			// Fill this pixel with pattern check
+			if (this.shouldFillPixel(x, y, pattern)) {
+				setPixel(x, y, fillColor);
+			}
 
 			// Add neighbors to stack (4-way connectivity)
 			stack.push({ x: x + 1, y });
@@ -109,6 +113,7 @@ class BucketTool extends BaseTool {
 		targetColor: number,
 		fillColor: number,
 		tolerance: number,
+		pattern: string,
 		canvas: { width: number; height: number },
 		setPixel: (x: number, y: number, colorIndex: number) => void,
 		getPixel: (x: number, y: number) => number
@@ -120,9 +125,32 @@ class BucketTool extends BaseTool {
 			for (let x = 0; x < width; x++) {
 				const currentColor = getPixel(x, y);
 				if (this.colorMatches(currentColor, targetColor, tolerance)) {
-					setPixel(x, y, fillColor);
+					// Fill with pattern check
+					if (this.shouldFillPixel(x, y, pattern)) {
+						setPixel(x, y, fillColor);
+					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * Check if a pixel should be filled based on the pattern type
+	 */
+	private shouldFillPixel(x: number, y: number, pattern: string): boolean {
+		switch (pattern) {
+			case 'solid':
+				return true;
+			case 'checkerboard':
+				return (x + y) % 2 === 0;
+			case 'horizontal':
+				return y % 2 === 0;
+			case 'vertical':
+				return x % 2 === 0;
+			case 'diagonal':
+				return (x - y) % 2 === 0;
+			default:
+				return true;
 		}
 	}
 
