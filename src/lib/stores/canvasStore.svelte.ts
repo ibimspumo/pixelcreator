@@ -3,7 +3,7 @@
  * Uses Svelte 5 Runes for reactivity
  */
 
-import type { CanvasState, Layer, Pixel } from '$lib/types/canvas.types';
+import type { CanvasState, Layer, Pixel, Tool } from '$lib/types/canvas.types';
 import { COLOR_PALETTE } from '$lib/constants/colorPalette';
 
 function createCanvasStore() {
@@ -51,6 +51,7 @@ function createCanvasStore() {
 	let zoom = $state(initialState.zoom);
 	let panX = $state(initialState.panX);
 	let panY = $state(initialState.panY);
+	let activeTool = $state<Tool>('pencil');
 
 	// Derived state
 	let activeLayer = $derived(layers.find((l) => l.id === activeLayerId));
@@ -255,6 +256,10 @@ function createCanvasStore() {
 		layers = newLayers;
 	}
 
+	function setActiveTool(tool: Tool) {
+		activeTool = tool;
+	}
+
 	return {
 		// State (read-only getters)
 		get width() {
@@ -284,6 +289,9 @@ function createCanvasStore() {
 		get panY() {
 			return panY;
 		},
+		get activeTool() {
+			return activeTool;
+		},
 
 		// Actions
 		setPixel,
@@ -303,7 +311,8 @@ function createCanvasStore() {
 		moveLayerUp,
 		moveLayerDown,
 		setLayerOpacity,
-		reorderLayers
+		reorderLayers,
+		setActiveTool
 	};
 }
 
