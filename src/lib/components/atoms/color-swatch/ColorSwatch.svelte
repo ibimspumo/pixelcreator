@@ -1,9 +1,41 @@
+<!--
+  @component ColorSwatch
+
+  A clickable color swatch component representing a single color in the 64-color palette.
+  Displays the color with visual feedback for hover and active states. Special handling
+  for transparent color (index 0) with checkerboard pattern.
+
+  @example
+  ```svelte
+  <ColorSwatch
+    color="#FF0000"
+    index={5}
+    active={primaryColor === 5}
+    onclick={(idx) => setPrimaryColor(idx)}
+  />
+  ```
+
+  @remarks
+  - Index 0 (transparent) displays a checkerboard background pattern
+  - Active state shows accent border with box-shadow
+  - Hover state scales up slightly and changes border color
+  - Responsive sizing with min/max widths for flexible layouts
+  - Title tooltip shows color value and palette index
+-->
 <script lang="ts">
+	/**
+	 * Props interface for ColorSwatch component
+	 */
 	interface Props {
+		/** Hex color value (e.g., '#FF0000') or 'transparent' */
 		color: string;
+		/** Color index in the 64-color palette (0-63) */
 		index: number;
+		/** Whether this swatch is currently selected */
 		active?: boolean;
+		/** Click handler receiving the color index */
 		onclick?: (index: number) => void;
+		/** Swatch size variant */
 		size?: 'sm' | 'md' | 'lg';
 	}
 

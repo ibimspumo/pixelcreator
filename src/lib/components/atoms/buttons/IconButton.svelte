@@ -1,12 +1,44 @@
+<!--
+  @component IconButton
+
+  A reusable button component that displays a Lucide icon with configurable size and state.
+  Used throughout the application for toolbar buttons, panel controls, and action buttons.
+
+  @example
+  ```svelte
+  <IconButton
+    icon={Pencil}
+    onclick={handleClick}
+    title="Draw (B)"
+    active={activeTool === 'pencil'}
+  />
+  ```
+
+  @remarks
+  - Supports three sizes: 'sm' (24px), 'md' (32px), 'lg' (40px)
+  - Active state applies accent color background
+  - Disabled state reduces opacity and prevents interaction
+  - Automatically scales icon to fit button size
+  - Uses CSS custom properties for theming
+-->
 <script lang="ts">
 	import type { Component } from 'svelte';
 
+	/**
+	 * Props interface for IconButton component
+	 */
 	interface Props {
+		/** Click handler function */
 		onclick?: () => void;
+		/** Tooltip text shown on hover */
 		title?: string;
+		/** Whether the button is in active/selected state */
 		active?: boolean;
+		/** Whether the button is disabled */
 		disabled?: boolean;
+		/** Lucide icon component to display */
 		icon: Component;
+		/** Button size variant */
 		size?: 'sm' | 'md' | 'lg';
 	}
 

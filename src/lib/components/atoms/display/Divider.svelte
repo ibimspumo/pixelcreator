@@ -1,5 +1,27 @@
+<!--
+  @component Divider
+
+  A simple visual separator component that can be oriented horizontally or vertically.
+  Used to create visual separation between UI sections, toolbar groups, or panel content.
+
+  @example
+  ```svelte
+  <Divider orientation="horizontal" />
+  <Divider orientation="vertical" />
+  ```
+
+  @remarks
+  - Horizontal: 1px height, full width, vertical margins
+  - Vertical: 1px width, full height, horizontal margins
+  - Uses CSS custom properties for color theming
+  - Defaults to horizontal orientation
+-->
 <script lang="ts">
+	/**
+	 * Props interface for Divider component
+	 */
 	interface Props {
+		/** Orientation of the divider line */
 		orientation?: 'horizontal' | 'vertical';
 	}
 

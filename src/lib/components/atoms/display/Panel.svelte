@@ -1,8 +1,34 @@
+<!--
+  @component Panel
+
+  A container component that provides a styled panel with an optional header.
+  Used as a wrapper for sidebar panels like Colors, Layers, and Tool Properties.
+  Features scrollable content area and consistent spacing.
+
+  @example
+  ```svelte
+  <Panel title="Layers">
+    <!-- Panel content goes here -->
+  </Panel>
+  ```
+
+  @remarks
+  - Optional title displays in uppercase header with background
+  - Content area is scrollable and fills available space
+  - Uses Svelte 5's Snippet API for content slot
+  - Consistent styling with CSS custom properties
+  - Full height with flex layout
+-->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
+	/**
+	 * Props interface for Panel component
+	 */
 	interface Props {
+		/** Optional panel title displayed in header */
 		title?: string;
+		/** Content to render inside the panel body */
 		children: Snippet;
 	}
 
