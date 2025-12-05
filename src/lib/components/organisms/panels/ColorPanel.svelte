@@ -132,6 +132,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-lg);
+		width: 100%;
+		overflow: hidden;
 	}
 
 	.selected-colors {
@@ -289,5 +291,13 @@
 		display: grid;
 		grid-template-columns: repeat(8, 1fr);
 		gap: var(--spacing-xs);
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	/* Ensure color swatches scale properly */
+	.palette-grid :global(.color-swatch) {
+		width: 100%;
+		aspect-ratio: 1;
 	}
 </style>

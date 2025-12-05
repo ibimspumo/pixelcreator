@@ -52,5 +52,7 @@
 		flex: 1;
 		overflow: auto;
 		padding: var(--spacing-md);
+		box-sizing: border-box;
+		width: 100%;
 	}
 </style>

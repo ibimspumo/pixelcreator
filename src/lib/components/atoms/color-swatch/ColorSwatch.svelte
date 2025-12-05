@@ -31,6 +31,7 @@
 		cursor: pointer;
 		transition: all var(--transition-fast);
 		padding: 0;
+		aspect-ratio: 1;
 	}
 
 	.color-swatch.transparent {
@@ -49,19 +50,19 @@
 		transform: scale(1.05);
 	}
 
-	/* Sizes */
+	/* Sizes - use min/max for better responsiveness */
 	.size-sm {
-		width: 20px;
-		height: 20px;
+		min-width: 16px;
+		max-width: 24px;
 	}
 
 	.size-md {
-		width: 28px;
-		height: 28px;
+		min-width: 24px;
+		max-width: 36px;
 	}
 
 	.size-lg {
-		width: 36px;
-		height: 36px;
+		min-width: 32px;
+		max-width: 44px;
 	}
 </style>
