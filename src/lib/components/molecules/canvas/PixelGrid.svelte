@@ -13,12 +13,13 @@
   @remarks
   - Initializes CanvasRenderer with 32px pixel size and grid display
   - Uses Svelte 5's $effect rune for reactive rendering when canvas state changes
-  - Tool-aware drawing: Pencil uses selected colors, Eraser sets pixels to transparent
+  - Tool-aware drawing: Pencil uses selected colors, Eraser sets pixels to transparent, Bucket fills areas
   - Pencil: Left-click draws with primary color, right-click draws with secondary color
   - Eraser: Both left and right click erase to transparent (color index 0)
+  - Bucket: Flood fills contiguous area with primary (left-click) or secondary (right-click) color
   - Prevents context menu on right-click for seamless drawing
   - Automatic cleanup on component destroy
-  - Drawing state managed with $state rune for click-and-drag functionality
+  - Drawing state managed with $state rune for click-and-drag functionality (except bucket tool)
   - Crosshair cursor for precise pixel placement
   - Checkerboard background for transparency visualization
   - Zoom: Mouse wheel, keyboard shortcuts (+/- to zoom, 0 to reset)
@@ -84,6 +85,12 @@
 	 * Handles mouse down event to start drawing
 	 */
 	function handleMouseDown(event: MouseEvent) {
+		// Fill tool only works on click, not drag
+		if (canvasStore.activeTool === 'bucket') {
+			handleFill(event);
+			return;
+		}
+
 		isDrawing = true;
 		drawPixel(event);
 	}
@@ -141,6 +148,32 @@
 		}
 
 		canvasStore.setPixel(x, y, colorIndex);
+		renderCanvas();
+	}
+
+	/**
+	 * Handles fill/bucket tool click to flood fill an area
+	 * @param event - Mouse event containing cursor position
+	 */
+	function handleFill(event: MouseEvent) {
+		if (!renderer || !canvasElement) return;
+
+		const rect = canvasElement.getBoundingClientRect();
+		const coords = renderer.getPixelCoordinates(
+			event.clientX,
+			event.clientY,
+			rect,
+			canvasStore.zoom
+		);
+
+		if (!coords) return;
+
+		const { x, y } = coords;
+
+		// Use primary color for left click, secondary for right click
+		const colorIndex = event.button === 2 ? colorStore.secondaryColorIndex : colorStore.primaryColorIndex;
+
+		canvasStore.fillArea(x, y, colorIndex);
 		renderCanvas();
 	}
 
