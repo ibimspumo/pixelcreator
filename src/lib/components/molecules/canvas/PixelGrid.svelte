@@ -13,7 +13,9 @@
   @remarks
   - Initializes CanvasRenderer with 32px pixel size and grid display
   - Uses Svelte 5's $effect rune for reactive rendering when canvas state changes
-  - Left-click draws with primary color, right-click draws with secondary color
+  - Tool-aware drawing: Pencil uses selected colors, Eraser sets pixels to transparent
+  - Pencil: Left-click draws with primary color, right-click draws with secondary color
+  - Eraser: Both left and right click erase to transparent (color index 0)
   - Prevents context menu on right-click for seamless drawing
   - Automatic cleanup on component destroy
   - Drawing state managed with $state rune for click-and-drag functionality
@@ -127,8 +129,16 @@
 
 		const { x, y } = coords;
 
-		// Use primary color for left click, secondary for right click
-		const colorIndex = event.button === 2 ? colorStore.secondaryColorIndex : colorStore.primaryColorIndex;
+		// Determine color index based on active tool
+		let colorIndex: number;
+
+		if (canvasStore.activeTool === 'eraser') {
+			// Eraser always sets to transparent (index 0)
+			colorIndex = 0;
+		} else {
+			// Pencil: Use primary color for left click, secondary for right click
+			colorIndex = event.button === 2 ? colorStore.secondaryColorIndex : colorStore.primaryColorIndex;
+		}
 
 		canvasStore.setPixel(x, y, colorIndex);
 		renderCanvas();
