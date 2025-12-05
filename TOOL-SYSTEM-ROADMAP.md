@@ -98,9 +98,9 @@ All three sub-phases of Phase 1 have been **successfully completed**!
 
 | Tool | Status | Implementation | Options | State | Notes |
 |------|--------|----------------|---------|-------|-------|
-| PencilTool | ✅ Complete | ✅ | ✅ brushSize (implemented) | ✅ | Multi-pixel drawing with brush size |
-| EraserTool | ✅ Complete | ✅ | ✅ brushSize (implemented) | ✅ | Multi-pixel erasing with brush size |
-| BucketTool | ✅ Complete | ✅ | ✅ tolerance, contiguous (implemented) | ✅ | Global fill + tolerance support |
+| PencilTool | ✅ Complete | ✅ | ✅ brushSize, snapToGrid, gridSize | ✅ | Multi-pixel drawing with grid snapping |
+| EraserTool | ✅ Complete | ✅ | ✅ brushSize, snapToGrid, gridSize | ✅ | Multi-pixel erasing with grid snapping |
+| BucketTool | ✅ Complete | ✅ | ✅ tolerance, contiguous, pattern | ✅ | Pattern fill support (5 patterns) |
 | EyedropperTool | ✅ Complete | ✅ | ❌ | ✅ | colorStore integration done |
 | HandTool | ✅ Complete | ✅ | ✅ panSpeed (implemented) | ✅ | Full pan with cursor feedback |
 | RectangleTool | ✅ Complete | ✅ | ✅ filled, lineWidth, perfectPixels | ✅ | Draw rectangles/squares with live preview |
@@ -166,12 +166,11 @@ All three sub-phases of Phase 1 have been **successfully completed**!
    - ✅ Live preview with pixel restoration
    - ✅ Keyboard shortcuts: U (Rectangle), L (Line), C (Circle)
 
-### Immediate Next Steps (Optional Enhancements)
-
-1. **Apply New Options to Existing Tools**
-   - Add pattern option to BucketTool
-   - Add snap to grid to PencilTool/EraserTool
-   - Test and refine new options
+4. ✅ **Applied New Options to Existing Tools** (COMPLETED 2025-12-05)
+   - ✅ BucketTool: Added pattern option (5 patterns: solid, checkerboard, horizontal, vertical, diagonal)
+   - ✅ PencilTool: Added snapToGrid and gridSize options
+   - ✅ EraserTool: Added snapToGrid and gridSize options
+   - ✅ All options tested and working in dev server
 
 ### Future Considerations
 
@@ -682,9 +681,9 @@ Draw freehand with primary or secondary color
 
 **Tools Now Fully Functional (9 total):**
 
-- PencilTool: Multi-pixel drawing with configurable brush size
-- EraserTool: Multi-pixel erasing with configurable brush size
-- BucketTool: Global fill + tolerance-based color matching
+- PencilTool: Multi-pixel drawing with brush size + grid snapping
+- EraserTool: Multi-pixel erasing with brush size + grid snapping
+- BucketTool: Tolerance-based fill with 5 pattern options
 - EyedropperTool: Pick colors from canvas
 - HandTool: Smooth panning with configurable speed
 - **RectangleTool: Draw rectangles/squares with fill/outline modes**
