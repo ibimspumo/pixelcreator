@@ -35,6 +35,33 @@
 	let isDrawing = $state(false);
 	let toolsLoaded = $state(false);
 
+	// Set up reactive rendering using $effect rune (must be at top level)
+	$effect(() => {
+		// This effect runs whenever canvas state changes
+		const { width, height, layers, zoom } = canvasStore;
+		if (renderer && toolsLoaded) {
+			renderer.requestRedraw();
+			renderer.render(width, height, layers, zoom);
+		}
+	});
+
+	// React to tool changes
+	$effect(() => {
+		if (!toolsLoaded) return;
+
+		const activeTool = toolRegistry.getTool(canvasStore.activeTool);
+		if (activeTool && activeTool.onActivate) {
+			activeTool.onActivate(createToolContext());
+		}
+
+		return () => {
+			// Cleanup when tool changes
+			if (activeTool && activeTool.onDeactivate) {
+				activeTool.onDeactivate(createToolContext());
+			}
+		};
+	});
+
 	onMount(async () => {
 		// Load all tools first
 		await loadAllTools();
@@ -50,24 +77,8 @@
 		// Perform initial render
 		renderCanvas();
 
-		// Set up reactive rendering using $effect rune
-		$effect(() => {
-			// This effect runs whenever canvas state changes
-			const { width, height, layers, zoom } = canvasStore;
-			if (renderer) {
-				renderer.requestRedraw();
-				renderer.render(width, height, layers, zoom);
-			}
-		});
-
 		// Add global keyboard listeners
 		window.addEventListener('keydown', handleKeyDown);
-
-		// Notify active tool of activation
-		const activeTool = toolRegistry.getTool(canvasStore.activeTool);
-		if (activeTool && activeTool.onActivate) {
-			activeTool.onActivate(createToolContext());
-		}
 	});
 
 	onDestroy(() => {
