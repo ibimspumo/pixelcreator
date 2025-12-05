@@ -16,6 +16,58 @@
 	// Layers are rendered from top to bottom in UI, but stored bottom to top
 	// So we need to reverse the array for display
 	let displayLayers = $derived([...canvasStore.layers].reverse());
+
+	// Drag & Drop state
+	let draggedLayerId = $state<string | null>(null);
+	let dragOverLayerId = $state<string | null>(null);
+
+	function handleDragStart(layerId: string) {
+		return (e: DragEvent) => {
+			draggedLayerId = layerId;
+			if (e.dataTransfer) {
+				e.dataTransfer.effectAllowed = 'move';
+				e.dataTransfer.setData('text/plain', layerId);
+			}
+		};
+	}
+
+	function handleDragOver(layerId: string) {
+		return (e: DragEvent) => {
+			e.preventDefault();
+			if (draggedLayerId && draggedLayerId !== layerId) {
+				dragOverLayerId = layerId;
+			}
+		};
+	}
+
+	function handleDrop(targetLayerId: string) {
+		return (e: DragEvent) => {
+			e.preventDefault();
+			if (!draggedLayerId || draggedLayerId === targetLayerId) return;
+
+			// Get indices in the actual store array
+			const draggedIndex = canvasStore.layers.findIndex((l) => l.id === draggedLayerId);
+			const targetIndex = canvasStore.layers.findIndex((l) => l.id === targetLayerId);
+
+			if (draggedIndex === -1 || targetIndex === -1) return;
+
+			// Reorder layers in store
+			const newLayers = [...canvasStore.layers];
+			const [removed] = newLayers.splice(draggedIndex, 1);
+			newLayers.splice(targetIndex, 0, removed);
+
+			// Update store (we need a method for this)
+			canvasStore.reorderLayers(newLayers);
+
+			draggedLayerId = null;
+			dragOverLayerId = null;
+		};
+	}
+
+	function handleDragEnd() {
+		draggedLayerId = null;
+		dragOverLayerId = null;
+	}
 </script>
 
 <Panel title="Layers">
@@ -28,8 +80,8 @@
 					canvasWidth={canvasStore.width}
 					canvasHeight={canvasStore.height}
 					isActive={layer.id === canvasStore.activeLayerId}
-					canMoveUp={reversedIndex > 0}
-					canMoveDown={reversedIndex < canvasStore.layers.length - 1}
+					canMoveUp={index > 0}
+					canMoveDown={index < displayLayers.length - 1}
 					onSelect={() => canvasStore.setActiveLayer(layer.id)}
 					onToggleVisibility={() => canvasStore.toggleLayerVisibility(layer.id)}
 					onToggleLock={() => canvasStore.toggleLayerLock(layer.id)}
@@ -37,6 +89,10 @@
 					onMoveUp={() => canvasStore.moveLayerUp(layer.id)}
 					onMoveDown={() => canvasStore.moveLayerDown(layer.id)}
 					onRename={(newName) => canvasStore.renameLayer(layer.id, newName)}
+					onDragStart={handleDragStart(layer.id)}
+					onDragOver={handleDragOver(layer.id)}
+					onDrop={handleDrop(layer.id)}
+					onDragEnd={handleDragEnd}
 				/>
 			{/each}
 		</div>

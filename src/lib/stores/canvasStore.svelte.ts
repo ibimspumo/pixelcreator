@@ -251,6 +251,10 @@ function createCanvasStore() {
 		}
 	}
 
+	function reorderLayers(newLayers: Layer[]) {
+		layers = newLayers;
+	}
+
 	return {
 		// State (read-only getters)
 		get width() {
@@ -298,7 +302,8 @@ function createCanvasStore() {
 		duplicateLayer,
 		moveLayerUp,
 		moveLayerDown,
-		setLayerOpacity
+		setLayerOpacity,
+		reorderLayers
 	};
 }
 

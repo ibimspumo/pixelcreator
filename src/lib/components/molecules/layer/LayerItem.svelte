@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LayerThumbnail from './LayerThumbnail.svelte';
 	import IconButton from '$lib/components/atoms/buttons/IconButton.svelte';
-	import { Eye, EyeOff, Lock, Unlock, Copy, ChevronUp, ChevronDown } from '@lucide/svelte';
+	import { Eye, EyeOff, Lock, Unlock, Copy, ChevronUp, ChevronDown, GripVertical } from '@lucide/svelte';
 	import type { Layer } from '$lib/types/canvas.types';
 
 	interface Props {
@@ -18,6 +18,10 @@
 		onMoveUp: () => void;
 		onMoveDown: () => void;
 		onRename: (newName: string) => void;
+		onDragStart?: (e: DragEvent) => void;
+		onDragOver?: (e: DragEvent) => void;
+		onDrop?: (e: DragEvent) => void;
+		onDragEnd?: (e: DragEvent) => void;
 	}
 
 	let {
@@ -33,11 +37,16 @@
 		onDuplicate,
 		onMoveUp,
 		onMoveDown,
-		onRename
+		onRename,
+		onDragStart,
+		onDragOver,
+		onDrop,
+		onDragEnd
 	}: Props = $props();
 
 	let isEditing = $state(false);
 	let editName = $state(layer.name);
+	let isDragging = $state(false);
 
 	function startEditing() {
 		isEditing = true;
@@ -59,9 +68,50 @@
 			isEditing = false;
 		}
 	}
+
+	function handleDragStart(e: DragEvent) {
+		isDragging = true;
+		if (e.dataTransfer) {
+			e.dataTransfer.effectAllowed = 'move';
+		}
+		onDragStart?.(e);
+	}
+
+	function handleDragEnd(e: DragEvent) {
+		isDragging = false;
+		onDragEnd?.(e);
+	}
+
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault();
+		if (e.dataTransfer) {
+			e.dataTransfer.dropEffect = 'move';
+		}
+		onDragOver?.(e);
+	}
+
+	function handleDrop(e: DragEvent) {
+		e.preventDefault();
+		onDrop?.(e);
+	}
 </script>
 
-<div class="layer-item" class:active={isActive} onclick={onSelect}>
+<div
+	class="layer-item"
+	class:active={isActive}
+	class:dragging={isDragging}
+	onclick={onSelect}
+	draggable="true"
+	ondragstart={handleDragStart}
+	ondragend={handleDragEnd}
+	ondragover={handleDragOver}
+	ondrop={handleDrop}
+>
+	<!-- Drag Handle -->
+	<div class="drag-handle" title="Drag to reorder">
+		<GripVertical size={16} />
+	</div>
+
 	<!-- Thumbnail -->
 	<div class="layer-thumbnail-wrapper">
 		<LayerThumbnail {layer} width={canvasWidth} height={canvasHeight} size={40} />
@@ -160,7 +210,7 @@
 		background-color: var(--color-bg-tertiary);
 		border: 2px solid var(--color-border);
 		border-radius: var(--radius-md);
-		cursor: pointer;
+		cursor: grab;
 		transition: all var(--transition-fast);
 		width: 100%;
 	}
@@ -174,6 +224,28 @@
 		border-color: var(--color-accent);
 		background-color: var(--color-bg-elevated);
 		box-shadow: 0 0 0 1px var(--color-accent);
+	}
+
+	.layer-item.dragging {
+		opacity: 0.5;
+		cursor: grabbing;
+	}
+
+	.drag-handle {
+		display: flex;
+		align-items: center;
+		color: var(--color-text-secondary);
+		cursor: grab;
+		padding: 2px;
+		flex-shrink: 0;
+	}
+
+	.drag-handle:hover {
+		color: var(--color-text-primary);
+	}
+
+	.layer-item.dragging .drag-handle {
+		cursor: grabbing;
 	}
 
 	.layer-thumbnail-wrapper {
