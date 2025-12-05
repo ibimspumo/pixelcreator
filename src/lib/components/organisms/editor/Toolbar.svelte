@@ -17,7 +17,7 @@
   - Connected to canvasStore.activeTool for global tool state
   - Keyboard shortcuts shown in tooltips (V, H, B, E, G, I, U, Z)
   - Active tool displays with accent background
-  - Pencil and Eraser tools are fully implemented
+  - Pencil, Eraser, and Bucket tools are fully implemented
   - Other tools are UI-only placeholders
 -->
 <script lang="ts">
