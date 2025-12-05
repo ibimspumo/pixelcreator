@@ -8,7 +8,7 @@
   @example
   ```svelte
   <Panel title="Layers">
-    <!-- Panel content goes here -->
+    <div>Panel content goes here</div>
   </Panel>
   ```
 
