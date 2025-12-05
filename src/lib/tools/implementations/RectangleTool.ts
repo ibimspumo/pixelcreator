@@ -31,7 +31,7 @@ class RectangleTool extends BaseTool {
 		order: 10,
 
 		// Extended configuration
-		version: '1.1.0',
+		version: '1.2.0',
 		author: 'inline.px',
 		license: 'MIT',
 		tags: ['shape', 'rectangle', 'drawing', 'geometry'],
@@ -168,7 +168,6 @@ class RectangleTool extends BaseTool {
 				for (let px = x1; px <= x2; px++) {
 					if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
 						if (isPreview) {
-							// Store original color for preview
 							this.previewPixels.push({ x: px, y: py, originalColor: getPixel(px, py) });
 						}
 						setPixel(px, py, colorIndex);
@@ -176,57 +175,31 @@ class RectangleTool extends BaseTool {
 				}
 			}
 		} else {
-			// Draw outline rectangle with proper line width
-			// Draw as multiple nested rectangles
-			for (let i = 0; i < lineWidth; i++) {
-				const innerX1 = x1 + i;
-				const innerY1 = y1 + i;
-				const innerX2 = x2 - i;
-				const innerY2 = y2 - i;
+			// Draw outline rectangle - only pixels within lineWidth distance from edge
+			const pixels = new Set<string>();
 
-				// Stop if rectangle becomes too small
-				if (innerX1 > innerX2 || innerY1 > innerY2) break;
+			for (let py = y1; py <= y2; py++) {
+				for (let px = x1; px <= x2; px++) {
+					if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+						// Calculate distance from edge
+						const distFromLeft = px - x1;
+						const distFromRight = x2 - px;
+						const distFromTop = py - y1;
+						const distFromBottom = y2 - py;
 
-				// Top horizontal line
-				for (let px = innerX1; px <= innerX2; px++) {
-					if (px >= 0 && px < canvas.width && innerY1 >= 0 && innerY1 < canvas.height) {
-						if (isPreview) {
-							this.previewPixels.push({ x: px, y: innerY1, originalColor: getPixel(px, innerY1) });
-						}
-						setPixel(px, innerY1, colorIndex);
-					}
-				}
+						// Get minimum distance to any edge
+						const minDist = Math.min(distFromLeft, distFromRight, distFromTop, distFromBottom);
 
-				// Bottom horizontal line
-				if (innerY2 !== innerY1) {
-					for (let px = innerX1; px <= innerX2; px++) {
-						if (px >= 0 && px < canvas.width && innerY2 >= 0 && innerY2 < canvas.height) {
-							if (isPreview) {
-								this.previewPixels.push({ x: px, y: innerY2, originalColor: getPixel(px, innerY2) });
+						// Only draw if within lineWidth from edge
+						if (minDist < lineWidth) {
+							const key = `${px},${py}`;
+							if (!pixels.has(key)) {
+								pixels.add(key);
+								if (isPreview) {
+									this.previewPixels.push({ x: px, y: py, originalColor: getPixel(px, py) });
+								}
+								setPixel(px, py, colorIndex);
 							}
-							setPixel(px, innerY2, colorIndex);
-						}
-					}
-				}
-
-				// Left vertical line
-				for (let py = innerY1; py <= innerY2; py++) {
-					if (innerX1 >= 0 && innerX1 < canvas.width && py >= 0 && py < canvas.height) {
-						if (isPreview) {
-							this.previewPixels.push({ x: innerX1, y: py, originalColor: getPixel(innerX1, py) });
-						}
-						setPixel(innerX1, py, colorIndex);
-					}
-				}
-
-				// Right vertical line
-				if (innerX2 !== innerX1) {
-					for (let py = innerY1; py <= innerY2; py++) {
-						if (innerX2 >= 0 && innerX2 < canvas.width && py >= 0 && py < canvas.height) {
-							if (isPreview) {
-								this.previewPixels.push({ x: innerX2, y: py, originalColor: getPixel(innerX2, py) });
-							}
-							setPixel(innerX2, py, colorIndex);
 						}
 					}
 				}
