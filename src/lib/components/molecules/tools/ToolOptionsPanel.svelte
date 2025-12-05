@@ -1,9 +1,8 @@
 <!--
   @component ToolOptionsPanel
 
-  Displays configurable options for the active tool.
-  Dynamically generates UI controls based on tool option schemas.
-  Currently displays option information only - full state management coming in Phase 1.2.
+  Displays and manages configurable options for the active tool.
+  Dynamically generates UI controls based on tool option schemas with full state persistence.
 
   @example
   ```svelte
@@ -15,12 +14,13 @@
   - Supports multiple option types: slider, boolean, number, string, color, select
   - Options are defined in tool configuration (ToolConfigExtended)
   - Dynamic visibility based on option.visible property
-  - Currently read-only (displays default values)
-  - Full state persistence will be added in Phase 1.2 (ToolStateManager)
+  - Full state persistence with localStorage (Phase 1.2 complete)
+  - Reactive updates when tool or options change
 -->
 <script lang="ts">
 	import { canvasStore } from '$lib/stores/canvasStore.svelte';
 	import { toolRegistry } from '$lib/tools';
+	import { toolStateManager } from '$lib/tools/state/ToolStateManager.svelte';
 	import type { ToolConfigExtended } from '$lib/tools/base/ToolMetadata';
 	import type { ToolOption } from '$lib/tools/base/ToolOptions';
 
@@ -37,27 +37,34 @@
 	let hasOptions = $derived(options.length > 0);
 
 	/**
+	 * Get current value for an option from state manager
+	 */
+	function getOptionValue(option: ToolOption): any {
+		if (!activeTool) return option.defaultValue;
+		const toolId = activeTool.config.id;
+		const storedValue = toolStateManager.getToolOption(toolId, option.id);
+		return storedValue !== undefined ? storedValue : option.defaultValue;
+	}
+
+	/**
+	 * Update option value in state manager
+	 */
+	function setOptionValue(option: ToolOption, value: any): void {
+		if (!activeTool) return;
+		const toolId = activeTool.config.id;
+		toolStateManager.setToolOption(toolId, option.id, value);
+	}
+
+	/**
 	 * Check if an option should be visible
 	 */
 	function isOptionVisible(option: ToolOption): boolean {
 		if (typeof option.visible === 'function') {
-			// TODO: Pass actual ToolContext when state management is implemented
-			return true; // For now, show all dynamic visibility options
+			// For now, show all dynamic visibility options
+			// TODO: Pass actual ToolContext when needed
+			return true;
 		}
 		return option.visible !== false;
-	}
-
-	/**
-	 * Format option value for display
-	 */
-	function formatValue(value: any, option: ToolOption): string {
-		if (option.type === 'boolean') {
-			return value ? 'On' : 'Off';
-		}
-		if (option.type === 'slider' || option.type === 'number') {
-			return String(value);
-		}
-		return String(value);
 	}
 </script>
 
@@ -84,6 +91,7 @@
 
 								<div class="option-control">
 									{#if option.type === 'slider'}
+										{@const currentValue = getOptionValue(option)}
 										<div class="slider-control">
 											<input
 												type="range"
@@ -91,54 +99,63 @@
 												min={option.min}
 												max={option.max}
 												step={option.step}
-												value={option.defaultValue}
-												disabled
+												value={currentValue}
+												oninput={(e) => setOptionValue(option, Number(e.currentTarget.value))}
 											/>
-											<span class="value-display">{option.defaultValue}</span>
+											<span class="value-display">{currentValue}</span>
 										</div>
 									{:else if option.type === 'boolean'}
+										{@const currentValue = getOptionValue(option)}
 										<input
 											type="checkbox"
 											id={option.id}
-											checked={option.defaultValue}
-											disabled
+											checked={currentValue}
+											onchange={(e) => setOptionValue(option, e.currentTarget.checked)}
 										/>
 									{:else if option.type === 'number'}
+										{@const currentValue = getOptionValue(option)}
 										<input
 											type="number"
 											id={option.id}
 											min={option.min}
 											max={option.max}
 											step={option.step}
-											value={option.defaultValue}
-											disabled
+											value={currentValue}
+											oninput={(e) => setOptionValue(option, Number(e.currentTarget.value))}
 										/>
 									{:else if option.type === 'color'}
-										<input type="color" id={option.id} value={option.defaultValue} disabled />
+										{@const currentValue = getOptionValue(option)}
+										<input
+											type="color"
+											id={option.id}
+											value={currentValue}
+											oninput={(e) => setOptionValue(option, e.currentTarget.value)}
+										/>
 									{:else if option.type === 'select' && option.options}
-										<select id={option.id} disabled>
+										{@const currentValue = getOptionValue(option)}
+										<select
+											id={option.id}
+											onchange={(e) => setOptionValue(option, e.currentTarget.value)}
+										>
 											{#each option.options as selectOption}
-												<option
-													value={selectOption.value}
-													selected={selectOption.value === option.defaultValue}
-												>
+												<option value={selectOption.value} selected={selectOption.value === currentValue}>
 													{selectOption.label}
 												</option>
 											{/each}
 										</select>
 									{:else if option.type === 'string'}
-										<input type="text" id={option.id} value={option.defaultValue} disabled />
+										{@const currentValue = getOptionValue(option)}
+										<input
+											type="text"
+											id={option.id}
+											value={currentValue}
+											oninput={(e) => setOptionValue(option, e.currentTarget.value)}
+										/>
 									{/if}
 								</div>
 							</div>
 						{/if}
 					{/each}
-				</div>
-
-				<div class="phase-notice">
-					<p>
-						<em>Tool state persistence coming in Phase 1.2</em>
-					</p>
 				</div>
 			{:else}
 				<p class="no-options">This tool has no configurable options.</p>
@@ -275,20 +292,5 @@
 		font-style: italic;
 		text-align: center;
 		padding: var(--spacing-lg);
-	}
-
-	.phase-notice {
-		margin-top: var(--spacing-md);
-		padding: var(--spacing-sm);
-		background: var(--color-bg-tertiary);
-		border: 1px dashed var(--color-border);
-		border-radius: var(--radius-sm);
-		text-align: center;
-	}
-
-	.phase-notice p {
-		margin: 0;
-		font-size: var(--text-xs);
-		color: var(--color-text-tertiary);
 	}
 </style>
