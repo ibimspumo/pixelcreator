@@ -1,3 +1,27 @@
+<!--
+  @component ColorPanel
+
+  Complex color management panel displaying primary/secondary color selection,
+  swap functionality, and the full 64-color palette grid. Features overlapping
+  color displays, active color mode toggle, and keyboard shortcuts.
+
+  @example
+  ```svelte
+  <ColorPanel />
+  ```
+
+  @remarks
+  - Primary and secondary colors displayed as overlapping squares
+  - Click color displays to toggle active mode (which color to modify)
+  - Swap button exchanges primary and secondary colors
+  - Keyboard shortcut: X to swap colors (works when not in input field)
+  - 8x8 palette grid (64 colors total) with responsive sizing
+  - Active color mode shown with accent border and in palette hint
+  - Color labels show index, name, and active state
+  - Index 0 (transparent) displays with checkerboard pattern
+  - Integrates with colorStore for state management
+  - Fully responsive grid layout
+-->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Panel from '$lib/components/atoms/display/Panel.svelte';
@@ -6,10 +30,14 @@
 	import { colorStore } from '$lib/stores/colorStore.svelte';
 	import { ArrowLeftRight } from '@lucide/svelte';
 
+	// Derived colors from store
 	let primaryColor = $derived(COLOR_PALETTE[colorStore.primaryColorIndex]);
 	let secondaryColor = $derived(COLOR_PALETTE[colorStore.secondaryColorIndex]);
 	let activeColorMode = $state<'primary' | 'secondary'>('primary');
 
+	/**
+	 * Selects a color for the currently active color mode (primary or secondary)
+	 */
 	function selectColor(index: number) {
 		if (activeColorMode === 'primary') {
 			colorStore.setPrimaryColor(index);
@@ -18,24 +46,39 @@
 		}
 	}
 
+	/**
+	 * Explicitly sets primary color
+	 */
 	function selectPrimaryColor(index: number) {
 		colorStore.setPrimaryColor(index);
 	}
 
+	/**
+	 * Explicitly sets secondary color
+	 */
 	function selectSecondaryColor(index: number) {
 		colorStore.setSecondaryColor(index);
 	}
 
+	/**
+	 * Swaps primary and secondary colors
+	 */
 	function swapColors() {
 		colorStore.swapColors();
 	}
 
+	/**
+	 * Toggles between primary and secondary color mode
+	 */
 	function toggleActiveColor() {
 		activeColorMode = activeColorMode === 'primary' ? 'secondary' : 'primary';
 	}
 
 	// Keyboard shortcut: X to swap colors
 	onMount(() => {
+		/**
+		 * Handles keyboard shortcuts for color operations
+		 */
 		function handleKeyPress(e: KeyboardEvent) {
 			// Only trigger if not in input field
 			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {

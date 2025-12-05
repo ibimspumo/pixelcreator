@@ -1,3 +1,22 @@
+<!--
+  @component ToolPropertiesPanel
+
+  Placeholder panel for tool-specific properties. Currently displays non-functional
+  brush size and opacity sliders as a UI preview for future implementation.
+
+  @example
+  ```svelte
+  <ToolPropertiesPanel />
+  ```
+
+  @remarks
+  - Placeholder component, not yet functional
+  - Shows brush size slider (1-50px)
+  - Shows opacity slider (0-100%)
+  - Values are hardcoded and not connected to any state
+  - Will be implemented when tool system is expanded
+  - Styled sliders with custom thumb design
+-->
 <script lang="ts">
 	import Panel from '$lib/components/atoms/display/Panel.svelte';
 </script>

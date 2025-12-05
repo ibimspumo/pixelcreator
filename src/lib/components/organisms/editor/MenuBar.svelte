@@ -1,3 +1,26 @@
+<!--
+  @component MenuBar
+
+  Top menu bar organism providing access to application menus and displaying
+  the project name. Currently implements the File menu with Export/Import Base64
+  functionality. Other menus (Edit, Image, Layer, View, Help) are placeholders.
+
+  @example
+  ```svelte
+  <MenuBar />
+  ```
+
+  @remarks
+  - Fixed height defined by --menubar-height CSS variable
+  - File menu implemented with dropdown: Export Base64 (Ctrl+E), Import Base64 (Ctrl+I)
+  - Overlay click-to-close pattern for dropdowns
+  - Project name displayed on the right side
+  - Uses modal dialogs for export/import operations
+  - Integrates with projectStore and canvasStore
+  - Import updates project metadata, resizes canvas, and loads pixel data
+  - Export generates Base64 string from current canvas state
+  - Other menus not yet implemented (Edit, Image, Layer, View, Help)
+-->
 <script lang="ts">
 	import { projectStore } from '$lib/stores/projectStore.svelte';
 	import { canvasStore } from '$lib/stores/canvasStore.svelte';
@@ -10,6 +33,9 @@
 	let showImportDialog = $state(false);
 	let exportedBase64 = $state('');
 
+	/**
+	 * Handles exporting the current project as Base64
+	 */
 	function handleSave() {
 		if (!projectStore.metadata) return;
 
@@ -19,11 +45,17 @@
 		showFileMenu = false;
 	}
 
+	/**
+	 * Opens the import dialog
+	 */
 	function handleLoad() {
 		showImportDialog = true;
 		showFileMenu = false;
 	}
 
+	/**
+	 * Handles import submission by updating project and canvas state
+	 */
 	function handleImportSubmit(name: string, width: number, height: number, pixels: number[][]) {
 		// Update project name if provided
 		if (projectStore.metadata) {
@@ -33,7 +65,7 @@
 		// Resize canvas
 		canvasStore.resizeCanvas(width, height);
 
-		// Import pixels
+		// Import pixels into active layer
 		const activeLayer = canvasStore.activeLayer;
 		if (activeLayer) {
 			activeLayer.pixels = pixels;

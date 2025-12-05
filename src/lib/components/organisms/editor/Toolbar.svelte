@@ -1,3 +1,24 @@
+<!--
+  @component Toolbar
+
+  Vertical toolbar displaying all available pixel art tools organized into groups.
+  Each tool has a keyboard shortcut hint in its tooltip. The toolbar maintains
+  local state for the active tool (not yet connected to global tool state).
+
+  @example
+  ```svelte
+  <Toolbar />
+  ```
+
+  @remarks
+  - Fixed width: 52px for compact layout
+  - Tool groups separated by horizontal dividers
+  - Groups: Move/Hand | Pencil/Eraser/Bucket/Eyedropper | Rectangle/Ellipse | Zoom
+  - Local $state for activeTool (future: connect to global tool state)
+  - Keyboard shortcuts shown in tooltips (V, H, B, E, G, I, U, Z)
+  - Active tool displays with accent background
+  - TODO: Most tools not yet implemented, only visual UI
+-->
 <script lang="ts">
 	import IconButton from '$lib/components/atoms/buttons/IconButton.svelte';
 	import Divider from '$lib/components/atoms/display/Divider.svelte';
@@ -13,6 +34,7 @@
 		Move
 	} from '@lucide/svelte';
 
+	// Local tool state (not yet connected to global state)
 	let activeTool = $state('pencil');
 </script>
 

@@ -1,3 +1,25 @@
+<!--
+  @component LayersPanel
+
+  Layer management panel displaying all canvas layers in a list with controls
+  for adding and deleting layers. Layers are shown from top to bottom (reversed
+  from internal storage order). Supports drag & drop reordering.
+
+  @example
+  ```svelte
+  <LayersPanel />
+  ```
+
+  @remarks
+  - Layers displayed top-to-bottom (reversed from storage order)
+  - Each layer shows: thumbnail, name, visibility, lock, duplicate, reorder
+  - Add layer button creates new layer with auto-incremented name
+  - Delete button removes active layer (disabled when only one layer exists)
+  - Drag & drop reordering with visual feedback
+  - Integrates with canvasStore for all layer operations
+  - Uses $derived rune for reactive display layer array
+  - Scrollable layer list with fixed action buttons at bottom
+-->
 <script lang="ts">
 	import Panel from '$lib/components/atoms/display/Panel.svelte';
 	import IconButton from '$lib/components/atoms/buttons/IconButton.svelte';
@@ -5,10 +27,16 @@
 	import { Plus, Trash2 } from '@lucide/svelte';
 	import { canvasStore } from '$lib/stores/canvasStore.svelte';
 
+	/**
+	 * Adds a new layer with auto-incremented name
+	 */
 	function addNewLayer() {
 		canvasStore.addLayer(`Layer ${canvasStore.layers.length + 1}`);
 	}
 
+	/**
+	 * Deletes a layer by ID
+	 */
 	function deleteLayer(layerId: string) {
 		canvasStore.removeLayer(layerId);
 	}
@@ -21,6 +49,9 @@
 	let draggedLayerId = $state<string | null>(null);
 	let dragOverLayerId = $state<string | null>(null);
 
+	/**
+	 * Returns drag start handler for a specific layer
+	 */
 	function handleDragStart(layerId: string) {
 		return (e: DragEvent) => {
 			draggedLayerId = layerId;
@@ -31,6 +62,9 @@
 		};
 	}
 
+	/**
+	 * Returns drag over handler for a specific layer
+	 */
 	function handleDragOver(layerId: string) {
 		return (e: DragEvent) => {
 			e.preventDefault();
@@ -40,6 +74,9 @@
 		};
 	}
 
+	/**
+	 * Returns drop handler for a specific layer to handle reordering
+	 */
 	function handleDrop(targetLayerId: string) {
 		return (e: DragEvent) => {
 			e.preventDefault();
@@ -56,7 +93,7 @@
 			const [removed] = newLayers.splice(draggedIndex, 1);
 			newLayers.splice(targetIndex, 0, removed);
 
-			// Update store (we need a method for this)
+			// Update store with reordered layers
 			canvasStore.reorderLayers(newLayers);
 
 			draggedLayerId = null;
@@ -64,6 +101,9 @@
 		};
 	}
 
+	/**
+	 * Resets drag state when drag operation ends
+	 */
 	function handleDragEnd() {
 		draggedLayerId = null;
 		dragOverLayerId = null;

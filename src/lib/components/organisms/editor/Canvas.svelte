@@ -1,3 +1,23 @@
+<!--
+  @component Canvas
+
+  Main canvas organism that wraps the PixelGrid component and displays
+  a status info bar at the bottom showing zoom level, dimensions, active layer,
+  and layer count. The canvas is centered with scrollable overflow.
+
+  @example
+  ```svelte
+  <Canvas />
+  ```
+
+  @remarks
+  - Wraps PixelGrid molecule for pixel drawing
+  - Centered canvas with scrollable wrapper
+  - Info bar displays: zoom percentage, canvas dimensions, active layer name, layer count
+  - Uses $derived from canvasStore for reactive info display
+  - Automatic pluralization for layer count
+  - Monospace font for technical information
+-->
 <script lang="ts">
 	import PixelGrid from '$lib/components/molecules/canvas/PixelGrid.svelte';
 	import { canvasStore } from '$lib/stores/canvasStore.svelte';

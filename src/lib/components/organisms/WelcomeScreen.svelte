@@ -1,3 +1,28 @@
+<!--
+  @component WelcomeScreen
+
+  Initial landing screen displayed before any project is loaded. Presents three
+  action cards for creating a new project, importing from Base64, or opening
+  an existing .inlinepx.json file. Features a gradient background and centered layout.
+
+  @example
+  ```svelte
+  <WelcomeScreen />
+  ```
+
+  @remarks
+  - Full viewport centered layout with gradient background
+  - Three action cards: New Project, Import Base64, Open File
+  - Each card shows icon, title, and description
+  - Hover effects with elevation and accent colors
+  - Opens respective modal dialogs for each action
+  - New Project: Creates project with selected size and clears canvas
+  - Import Base64: Parses Base64 string and loads into canvas
+  - Open File: Uses file picker to load .inlinepx.json files
+  - Error handling for file loading with user alerts
+  - Integrates with projectStore and canvasStore
+  - Footer displays app tagline about 64-color palette
+-->
 <script lang="ts">
 	import { FileText, Upload, FolderOpen } from '@lucide/svelte';
 	import NewProjectDialog from '$lib/components/molecules/dialogs/NewProjectDialog.svelte';
@@ -10,6 +35,9 @@
 	let showNewDialog = $state(false);
 	let showImportDialog = $state(false);
 
+	/**
+	 * Handles creation of a new project
+	 */
 	function handleNewProject(name: string, size: ProjectSize) {
 		// Create project
 		projectStore.createProject(name, size, size);
@@ -23,6 +51,9 @@
 		showNewDialog = false;
 	}
 
+	/**
+	 * Handles importing a project from Base64 string
+	 */
 	function handleImport(name: string, width: number, height: number, pixels: number[][]) {
 		// Create project
 		projectStore.createProject(name, width, height);
@@ -30,7 +61,7 @@
 		// Resize canvas
 		canvasStore.resizeCanvas(width, height);
 
-		// Import pixels
+		// Import pixels into active layer
 		const activeLayer = canvasStore.activeLayer;
 		if (activeLayer) {
 			activeLayer.pixels = pixels;
@@ -39,6 +70,9 @@
 		showImportDialog = false;
 	}
 
+	/**
+	 * Handles loading a project from a .inlinepx.json file
+	 */
 	async function handleLoadFile() {
 		try {
 			const projectData = await loadProjectFromFile();
@@ -54,7 +88,7 @@
 			// Resize canvas
 			canvasStore.resizeCanvas(metadata.width, metadata.height);
 
-			// Import pixels
+			// Import pixels into active layer
 			const activeLayer = canvasStore.activeLayer;
 			if (activeLayer) {
 				activeLayer.pixels = pixels;
