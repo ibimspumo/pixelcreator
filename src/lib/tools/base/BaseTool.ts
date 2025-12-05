@@ -6,14 +6,15 @@
  */
 
 import type { ToolConfig } from './ToolConfig';
+import type { ToolConfigExtended } from './ToolMetadata';
 import type { ToolContext, MouseEventContext } from './ToolContext';
 
 /**
  * Abstract base class for all drawing/editing tools
  */
 export abstract class BaseTool {
-	/** Tool configuration */
-	public abstract readonly config: ToolConfig;
+	/** Tool configuration (supports both basic and extended configs) */
+	public abstract readonly config: ToolConfig | ToolConfigExtended;
 
 	/**
 	 * Called when the tool is activated/selected
@@ -62,4 +63,16 @@ export abstract class BaseTool {
 	 * @returns true if tool can be used, false with optional reason
 	 */
 	canUse?(toolContext: ToolContext): { valid: boolean; reason?: string };
+
+	/**
+	 * Get default value for a tool option
+	 *
+	 * @param optionId - The option identifier
+	 * @returns The default value for the option, or undefined if not found
+	 */
+	getOption<T = any>(optionId: string): T | undefined {
+		const extendedConfig = this.config as ToolConfigExtended;
+		const option = extendedConfig.options?.find((opt) => opt.id === optionId);
+		return option?.defaultValue as T | undefined;
+	}
 }

@@ -2,15 +2,16 @@
  * Pencil Tool Implementation
  *
  * Allows freehand drawing with primary (left-click) or secondary (right-click) color.
- * Supports click-and-drag for continuous drawing.
+ * Supports click-and-drag for continuous drawing with configurable brush size.
  */
 
 import { BaseTool } from '../base/BaseTool';
-import type { ToolConfig } from '../base/ToolConfig';
+import type { ToolConfigExtended } from '../base/ToolMetadata';
+import { commonToolOptions } from '../base/ToolOptions';
 import type { ToolContext, MouseEventContext } from '../base/ToolContext';
 
 class PencilTool extends BaseTool {
-	public readonly config: ToolConfig = {
+	public readonly config: ToolConfigExtended = {
 		id: 'pencil',
 		name: 'Pencil',
 		description: 'Draw freehand with primary or secondary color',
@@ -20,7 +21,29 @@ class PencilTool extends BaseTool {
 		cursor: 'crosshair',
 		supportsDrag: true,
 		worksOnLockedLayers: false,
-		order: 1
+		order: 1,
+
+		// Extended configuration
+		version: '1.0.0',
+		author: 'inline.px',
+		license: 'MIT',
+		tags: ['drawing', 'basic', 'pixel', 'freehand'],
+
+		// Tool options
+		options: [commonToolOptions.brushSize],
+
+		// Documentation
+		documentation: {
+			description:
+				'The Pencil tool allows you to draw individual pixels on the canvas with precise control.',
+			usage: 'Click to draw a single pixel, or click and drag to draw continuously. Use left-click for primary color and right-click for secondary color.',
+			tips: [
+				'Hold Shift while dragging to draw straight lines (coming soon)',
+				'Use right-click to draw with secondary color',
+				'Adjust brush size in tool options for larger strokes'
+			],
+			relatedTools: ['eraser', 'bucket']
+		}
 	};
 
 	onMouseDown(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
