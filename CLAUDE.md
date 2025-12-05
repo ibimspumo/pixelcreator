@@ -81,8 +81,11 @@ tools/
 │   ├── EraserTool.ts           # ✅ Fully implemented with brush size option
 │   ├── BucketTool.ts           # ✅ Fully implemented with tolerance & contiguous
 │   ├── EyedropperTool.ts       # ✅ Fully implemented
-│   ├── MoveTool.ts             # 📝 Placeholder
-│   └── HandTool.ts             # 📝 Placeholder
+│   ├── HandTool.ts             # ✅ Fully implemented with pan speed option
+│   ├── RectangleTool.ts        # ✅ Fully implemented with fill/outline modes
+│   ├── LineTool.ts             # ✅ Fully implemented with line width & perfect angles
+│   ├── CircleTool.ts           # ✅ Fully implemented with fill/outline modes
+│   └── MoveTool.ts             # 📝 Placeholder
 ├── registry/
 │   ├── ToolRegistry.ts         # Central tool registry (singleton)
 │   └── ToolLoader.ts           # Auto-loads tools via glob imports

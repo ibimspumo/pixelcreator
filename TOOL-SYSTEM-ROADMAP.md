@@ -103,6 +103,9 @@ All three sub-phases of Phase 1 have been **successfully completed**!
 | BucketTool | ✅ Complete | ✅ | ✅ tolerance, contiguous (implemented) | ✅ | Global fill + tolerance support |
 | EyedropperTool | ✅ Complete | ✅ | ❌ | ✅ | colorStore integration done |
 | HandTool | ✅ Complete | ✅ | ✅ panSpeed (implemented) | ✅ | Full pan with cursor feedback |
+| RectangleTool | ✅ Complete | ✅ | ✅ filled, lineWidth, perfectPixels | ✅ | Draw rectangles/squares with live preview |
+| LineTool | ✅ Complete | ✅ | ✅ lineWidth, perfectAngles | ✅ | Draw lines with perfect 45° angles |
+| CircleTool | ✅ Complete | ✅ | ✅ filled, lineWidth, perfectPixels | ✅ | Draw circles/ellipses with live preview |
 | MoveTool | 📝 Placeholder | ❌ | ❌ | ✅ | Deferred - needs selection system |
 
 ---
@@ -155,18 +158,20 @@ All three sub-phases of Phase 1 have been **successfully completed**!
    - Including: snap to grid, blend modes, patterns, dithering, etc.
    - All ready for use in future tools
 
+3. ✅ **Shape Tools** (COMPLETED 2025-12-05)
+   - ✅ Rectangle tool with fill/outline options, perfect squares
+   - ✅ Circle/Ellipse tool with fill/outline options, perfect circles
+   - ✅ Line tool with width option, perfect 45-degree angles
+   - ✅ All tools use perfectPixels and other new options
+   - ✅ Live preview with pixel restoration
+   - ✅ Keyboard shortcuts: U (Rectangle), L (Line), C (Circle)
+
 ### Immediate Next Steps (Optional Enhancements)
 
 1. **Apply New Options to Existing Tools**
    - Add pattern option to BucketTool
    - Add snap to grid to PencilTool/EraserTool
    - Test and refine new options
-
-2. **Shape Tools** (2-3 hours)
-   - Rectangle tool with fill/outline options
-   - Circle/Ellipse tool
-   - Line tool with width option
-   - Use perfectPixels and other new options
 
 ### Future Considerations
 
@@ -665,22 +670,27 @@ Draw freehand with primary or secondary color
 
 ## 🎊 Current Session Summary
 
-**All Immediate Tasks Completed!**
+**All Immediate Tasks Completed + Shape Tools Added!**
 
 ✅ Enhanced 3 tools with configurable options (Eraser, Bucket, Pencil)
 ✅ Implemented HandTool from scratch with full pan functionality
 ✅ Added 10 new common tool options for future use
+✅ **NEW:** Implemented 3 shape tools (Rectangle, Line, Circle)
 ✅ Updated all documentation (CLAUDE.md + this roadmap)
 ✅ All features tested with dev server
 ✅ 0 errors, production-ready code
 
-**Tools Now Fully Functional:**
+**Tools Now Fully Functional (9 total):**
 
 - PencilTool: Multi-pixel drawing with configurable brush size
 - EraserTool: Multi-pixel erasing with configurable brush size
 - BucketTool: Global fill + tolerance-based color matching
+- EyedropperTool: Pick colors from canvas
 - HandTool: Smooth panning with configurable speed
-- All with persistent state management via localStorage
+- **RectangleTool: Draw rectangles/squares with fill/outline modes**
+- **LineTool: Draw lines with configurable width and perfect angles**
+- **CircleTool: Draw circles/ellipses with fill/outline modes**
+- MoveTool: Placeholder (deferred until selection system)
 
 **Developer Experience Improvements:**
 
@@ -688,5 +698,6 @@ Draw freehand with primary or secondary color
 - Comprehensive documentation for tool development
 - Type-safe tool system with auto-generated types
 - Professional architecture ready for scaling
+- **Live preview system with pixel restoration for shape tools**
 
-The tool system is now production-ready and extensible! 🚀
+The tool system is now production-ready and extensible with 8 fully functional tools! 🚀
