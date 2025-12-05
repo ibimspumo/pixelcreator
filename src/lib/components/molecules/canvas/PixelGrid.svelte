@@ -28,6 +28,7 @@
 	import { colorStore } from '$lib/stores/colorStore.svelte';
 	import { CanvasRenderer } from '$lib/utils/renderPipeline';
 	import { toolRegistry, loadAllTools } from '$lib/tools';
+	import { toolStateManager } from '$lib/tools/state/ToolStateManager.svelte';
 	import type { ToolContext, MouseEventContext } from '$lib/tools';
 
 	let canvasElement: HTMLCanvasElement;
@@ -63,6 +64,9 @@
 	});
 
 	onMount(async () => {
+		// Initialize tool state manager
+		toolStateManager.initialize();
+
 		// Load all tools first
 		await loadAllTools();
 		toolsLoaded = true;
@@ -112,6 +116,7 @@
 				secondaryColorIndex: colorStore.secondaryColorIndex
 			},
 			renderer,
+			state: toolStateManager,
 			setPixel: (x, y, colorIndex) => canvasStore.setPixel(x, y, colorIndex),
 			getPixel: (x, y, layerId) => canvasStore.getPixel(x, y, layerId),
 			requestRedraw: () => renderCanvas(),

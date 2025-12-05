@@ -7,6 +7,7 @@
 
 import type { Layer } from '$lib/types/canvas.types';
 import type { CanvasRenderer } from '$lib/utils/renderPipeline';
+import type { ToolStateManager } from '../state/ToolStateManager.svelte';
 
 /**
  * Mouse event context for tool interactions
@@ -58,6 +59,8 @@ export interface ToolContext {
 	colors: ColorContext;
 	/** Canvas renderer for re-rendering */
 	renderer: CanvasRenderer | null;
+	/** Tool state manager for persistent settings */
+	state: ToolStateManager;
 	/** Set pixel method */
 	setPixel: (x: number, y: number, colorIndex: number) => void;
 	/** Get pixel method */
