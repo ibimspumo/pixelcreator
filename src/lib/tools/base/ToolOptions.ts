@@ -115,5 +115,127 @@ export const commonToolOptions = {
 		description: 'Only fill connected pixels',
 		type: 'boolean' as const,
 		defaultValue: true
+	},
+
+	/**
+	 * Snap to grid option
+	 */
+	snapToGrid: {
+		id: 'snapToGrid',
+		label: 'Snap to Grid',
+		description: 'Snap cursor to grid intersections',
+		type: 'boolean' as const,
+		defaultValue: false
+	},
+
+	/**
+	 * Grid size option
+	 */
+	gridSize: {
+		id: 'gridSize',
+		label: 'Grid Size',
+		description: 'Size of the snap grid in pixels',
+		type: 'slider' as const,
+		defaultValue: 8,
+		min: 1,
+		max: 32,
+		step: 1
+	},
+
+	/**
+	 * Perfect pixels option (squares only)
+	 */
+	perfectPixels: {
+		id: 'perfectPixels',
+		label: 'Perfect Pixels',
+		description: 'Draw only perfect square shapes',
+		type: 'boolean' as const,
+		defaultValue: false
+	},
+
+	/**
+	 * Blend mode option
+	 */
+	blendMode: {
+		id: 'blendMode',
+		label: 'Blend Mode',
+		description: 'How to blend with existing pixels',
+		type: 'select' as const,
+		defaultValue: 'normal',
+		options: [
+			{ value: 'normal', label: 'Normal' },
+			{ value: 'add', label: 'Add' },
+			{ value: 'multiply', label: 'Multiply' },
+			{ value: 'screen', label: 'Screen' },
+			{ value: 'overlay', label: 'Overlay' }
+		]
+	},
+
+	/**
+	 * Pattern fill mode
+	 */
+	pattern: {
+		id: 'pattern',
+		label: 'Pattern',
+		description: 'Fill pattern type',
+		type: 'select' as const,
+		defaultValue: 'solid',
+		options: [
+			{ value: 'solid', label: 'Solid' },
+			{ value: 'checkerboard', label: 'Checkerboard' },
+			{ value: 'horizontal', label: 'Horizontal Lines' },
+			{ value: 'vertical', label: 'Vertical Lines' },
+			{ value: 'diagonal', label: 'Diagonal Lines' }
+		]
+	},
+
+	/**
+	 * Dithering amount
+	 */
+	dithering: {
+		id: 'dithering',
+		label: 'Dithering',
+		description: 'Amount of dithering to apply (0-100%)',
+		type: 'slider' as const,
+		defaultValue: 0,
+		min: 0,
+		max: 100,
+		step: 5
+	},
+
+	/**
+	 * Threshold value
+	 */
+	threshold: {
+		id: 'threshold',
+		label: 'Threshold',
+		description: 'Threshold value for binary operations',
+		type: 'slider' as const,
+		defaultValue: 128,
+		min: 0,
+		max: 255,
+		step: 1
+	},
+
+	/**
+	 * Smoothing/interpolation
+	 */
+	smoothing: {
+		id: 'smoothing',
+		label: 'Smoothing',
+		description: 'Enable smooth interpolation',
+		type: 'boolean' as const,
+		defaultValue: false
+	},
+
+	/**
+	 * Pressure sensitivity (for future tablet support)
+	 */
+	pressureSensitivity: {
+		id: 'pressureSensitivity',
+		label: 'Pressure Sensitivity',
+		description: 'Adjust size/opacity based on pressure',
+		type: 'boolean' as const,
+		defaultValue: false
 	}
 };

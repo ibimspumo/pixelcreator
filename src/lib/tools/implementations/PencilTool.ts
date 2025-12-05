@@ -24,7 +24,7 @@ class PencilTool extends BaseTool {
 		order: 1,
 
 		// Extended configuration
-		version: '1.0.0',
+		version: '1.1.0',
 		author: 'inline.px',
 		license: 'MIT',
 		tags: ['drawing', 'basic', 'pixel', 'freehand'],
@@ -55,18 +55,36 @@ class PencilTool extends BaseTool {
 	}
 
 	/**
-	 * Draw a pixel at the mouse position
+	 * Draw pixels at the mouse position
+	 * Respects brush size option for multi-pixel drawing
 	 */
 	private drawPixel(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
 		const { x, y, button } = mouseContext;
-		const { colors, setPixel, requestRedraw } = toolContext;
+		const { colors, setPixel, requestRedraw, canvas, state } = toolContext;
 
 		// Use primary color for left click, secondary for right click
 		const colorIndex = button === 2 ? colors.secondaryColorIndex : colors.primaryColorIndex;
 
-		setPixel(x, y, colorIndex);
-		requestRedraw();
+		// Get brush size from tool state (defaults to 1)
+		const brushSize = state.getToolOption<number>(this.config.id, 'brushSize') ?? 1;
 
+		// Calculate brush radius (brush size 1 = single pixel, size 2 = 2x2, etc.)
+		const radius = Math.floor(brushSize / 2);
+
+		// Draw pixels in brush area
+		for (let dy = -radius; dy < brushSize - radius; dy++) {
+			for (let dx = -radius; dx < brushSize - radius; dx++) {
+				const px = x + dx;
+				const py = y + dy;
+
+				// Check bounds
+				if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+					setPixel(px, py, colorIndex);
+				}
+			}
+		}
+
+		requestRedraw();
 		return true;
 	}
 
