@@ -72,18 +72,22 @@ All stores use Svelte 5's new Runes API instead of traditional stores:
 tools/
 ├── base/
 │   ├── BaseTool.ts              # Abstract base class all tools extend
-│   ├── ToolConfig.ts            # Tool configuration interfaces
+│   ├── ToolConfig.ts            # Basic tool configuration interface
+│   ├── ToolMetadata.ts          # Extended configuration with options & metadata
+│   ├── ToolOptions.ts           # Option schema & common reusable options
 │   └── ToolContext.ts           # Runtime context passed to tools
 ├── implementations/
-│   ├── PencilTool.ts           # ✅ Fully implemented
-│   ├── EraserTool.ts           # ✅ Fully implemented
-│   ├── BucketTool.ts           # ✅ Fully implemented (flood fill)
-│   ├── EyedropperTool.ts       # 🚧 Partial (needs colorStore integration)
+│   ├── PencilTool.ts           # ✅ Fully implemented with brush size option
+│   ├── EraserTool.ts           # ✅ Fully implemented with brush size option
+│   ├── BucketTool.ts           # ✅ Fully implemented with tolerance & contiguous
+│   ├── EyedropperTool.ts       # ✅ Fully implemented
 │   ├── MoveTool.ts             # 📝 Placeholder
 │   └── HandTool.ts             # 📝 Placeholder
 ├── registry/
 │   ├── ToolRegistry.ts         # Central tool registry (singleton)
 │   └── ToolLoader.ts           # Auto-loads tools via glob imports
+├── state/
+│   └── ToolStateManager.svelte.ts  # Persistent tool state with localStorage
 └── utils/
     └── iconResolver.svelte.ts  # Maps icon names to @lucide/svelte components
 ```
@@ -93,16 +97,93 @@ tools/
 - **Auto-registration**: Tools in `implementations/` are automatically discovered and loaded via Vite glob imports
 - **Singleton loading**: `loadAllTools()` can be called multiple times safely - uses internal loading state to prevent duplicate registration
 - **Self-contained**: Each tool defines its own config, behavior, and validation
-- **Dynamic UI**: Toolbar auto-generates from registered tools, grouped by category
+- **Configurable options**: Tools can define options (sliders, toggles, etc.) that appear in the UI
+- **Persistent state**: Tool settings automatically save to localStorage and restore on reload
+- **Dynamic UI**: Toolbar and options panel auto-generate from tool configurations
 - **Keyboard shortcuts**: Tools define shortcuts that work globally
 - **Tool validation**: Tools can validate if they can be used in current context
+- **Type-safe**: Auto-generated types ensure tool IDs are always valid
 
 **Adding a New Tool**:
 
 1. Create `src/lib/tools/implementations/MyTool.ts`
 2. Extend `BaseTool` and implement methods
 3. Export singleton: `export default new MyTool()`
-4. Tool automatically appears in toolbar on next load!
+4. Run `npm run generate:types` to update tool types
+5. Tool automatically appears in toolbar on next load!
+
+**Tool Configuration with Options**:
+
+Tools can use `ToolConfigExtended` to add configurable options:
+
+```typescript
+import { BaseTool } from '../base/BaseTool';
+import type { ToolConfigExtended } from '../base/ToolMetadata';
+import { commonToolOptions } from '../base/ToolOptions';
+import type { ToolContext, MouseEventContext } from '../base/ToolContext';
+
+class MyTool extends BaseTool {
+  public readonly config: ToolConfigExtended = {
+    id: 'mytool',
+    name: 'My Tool',
+    description: 'Does something cool',
+    iconName: 'Pencil',
+    category: 'draw',
+    shortcut: 'M',
+    cursor: 'crosshair',
+    supportsDrag: true,
+    worksOnLockedLayers: false,
+    order: 10,
+
+    // Extended configuration
+    version: '1.0.0',
+    author: 'inline.px',
+    license: 'MIT',
+    tags: ['drawing', 'custom'],
+
+    // Configurable options (appear in UI automatically)
+    options: [
+      commonToolOptions.brushSize,  // Reuse common option
+      {
+        id: 'customOption',
+        label: 'Custom Setting',
+        type: 'slider',
+        defaultValue: 50,
+        min: 0,
+        max: 100,
+        step: 1
+      }
+    ]
+  };
+
+  // Access option values from state manager
+  onMouseDown(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
+    const { state } = toolContext;
+    const brushSize = state.getToolOption<number>(this.config.id, 'brushSize') ?? 1;
+    const customValue = state.getToolOption<number>(this.config.id, 'customOption') ?? 50;
+
+    // Use option values...
+    return true;
+  }
+}
+
+export default new MyTool();
+```
+
+**Common Tool Options** (`commonToolOptions` from `ToolOptions.ts`):
+
+- `brushSize` - Slider (1-64 pixels)
+- `opacity` - Slider (0-100%)
+- `antiAlias` - Boolean toggle
+- `tolerance` - Slider (0-100) for color matching
+- `contiguous` - Boolean toggle for flood fill connectivity
+
+**Tool State Management**:
+
+- Tool option values are automatically persisted to localStorage
+- State syncs in real-time across all UI components
+- Access via `toolContext.state.getToolOption(toolId, optionId)`
+- Settings survive page reloads
 
 **Tool Loading**:
 
@@ -123,7 +204,8 @@ tools/
 
 - Canvas state (width, height, layers, activeLayerId, zoom)
 - Color state (primaryColorIndex, secondaryColorIndex)
-- Helper methods (setPixel, getPixel, requestRedraw)
+- Tool state manager (persistent settings via `state.getToolOption()`)
+- Helper methods (setPixel, getPixel, requestRedraw, setPrimaryColor, setSecondaryColor)
 - Renderer reference for advanced operations
 
 ### Color System
