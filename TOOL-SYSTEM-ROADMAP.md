@@ -294,6 +294,375 @@ The foundation is solid. Time to build features users will love! 🚀
 
 ---
 
+## 📋 Complete Original Roadmap
+
+### Phase 1 - Foundation (KRITISCH) ✅ COMPLETE
+
+**Priority**: CRITICAL
+**Status**: ✅ ALL DONE
+
+#### Phase 1.1: Enhanced Tool Configuration ✅
+- ✅ Extensible Metadata (version, author, license, tags)
+- ✅ Tool Options (brushSize, opacity, tolerance, etc.)
+- ✅ 10+ common reusable options
+- ✅ Dynamic UI generation from option schema
+
+#### Phase 1.2: Tool State Management ✅
+- ✅ Persistent tool settings with localStorage
+- ✅ Automatic synchronization
+- ✅ Import/export functionality
+- ✅ Usage tracking
+
+#### Phase 1.3: Enhanced Type Safety ✅
+- ✅ Tool IDs type-safe (auto-generated from implementations)
+- ✅ No string-based tool references
+- ✅ Build-time type generation
+- ✅ Prevents referencing non-existent tools
+
+---
+
+### Phase 2 - Features (HOCH) 📝 NOT STARTED
+
+**Priority**: HIGH
+**Status**: ⏸️ DEFERRED - Focus on user-facing features first
+**Recommendation**: Skip for now, add incrementally when needed
+
+#### Phase 2.1: Enhanced Lifecycle & Events (6-8 hours)
+
+**Goal**: Event Bus for tool communication and enhanced lifecycle hooks
+
+**Features to Implement:**
+- Event Bus system for inter-tool communication
+- Additional lifecycle hooks:
+  - `onToolChange(fromTool, toTool)` - Called when switching tools
+  - `onBeforeActivate()` - Called before tool activation (can cancel)
+  - `onAfterDeactivate()` - Called after tool deactivation
+  - `onStateChange(oldState, newState)` - Called when tool state changes
+- Global tool events:
+  - `tool:activated` - Broadcast when any tool is activated
+  - `tool:deactivated` - Broadcast when any tool is deactivated
+  - `tool:optionChanged` - Broadcast when tool option changes
+  - `tool:error` - Broadcast when tool encounters error
+- Event subscription API for tools to listen to each other
+
+**Benefits:**
+- Tools can react to other tools' actions
+- Better coordination between tools
+- Extensible plugin system for future enhancements
+
+**Implementation Complexity**: Medium
+**User Impact**: Low (internal framework improvement)
+
+---
+
+#### Phase 2.2: Advanced Validation (5-6 hours)
+
+**Goal**: Capability-based validation with detailed error messages
+
+**Features to Implement:**
+- Capability system for tools:
+  - `requiresActiveLayer: boolean`
+  - `requiresUnlockedLayer: boolean`
+  - `requiresSelection: boolean`
+  - `requiresMultipleLayers: boolean`
+  - `minCanvasSize: { width: number, height: number }`
+  - `maxCanvasSize: { width: number, height: number }`
+- Enhanced `canUse()` validation:
+  - Return detailed error objects instead of simple strings
+  - Suggest fixes for common issues
+  - Provide user-actionable error messages
+- Validation UI:
+  - Show validation errors in tooltip
+  - Disable tools with visual feedback
+  - Suggest alternative tools when current tool can't be used
+- Pre-validation before tool activation
+
+**Example:**
+```typescript
+canUse(context: ToolContext): ValidationResult {
+  return {
+    valid: false,
+    code: 'LAYER_LOCKED',
+    message: 'Layer is locked',
+    suggestion: 'Unlock the layer to use this tool',
+    action: () => canvasStore.unlockLayer(layerId)
+  };
+}
+```
+
+**Benefits:**
+- Better user experience with helpful error messages
+- Prevent invalid tool usage before it happens
+- Guide users to fix issues
+
+**Implementation Complexity**: Medium
+**User Impact**: High (better UX)
+
+---
+
+#### Phase 2.3: Testing Infrastructure (8-10 hours)
+
+**Goal**: Test harness, mocks, and fixtures for tool testing
+
+**Features to Implement:**
+- Test harness for tool testing:
+  - Mock ToolContext factory
+  - Mock MouseEventContext factory
+  - Canvas state fixtures (empty, with layers, various sizes)
+  - Color state fixtures
+- Tool testing utilities:
+  - `simulateMouseDown(x, y, button)`
+  - `simulateMouseMove(x, y)`
+  - `simulateMouseUp(x, y)`
+  - `simulateDrag(from, to, button)`
+  - `assertPixelColor(x, y, expectedColor)`
+  - `assertToolState(toolId, expectedState)`
+- Automated tests for existing tools:
+  - PencilTool: drawing, brush size, color selection
+  - EraserTool: erasing, brush size
+  - BucketTool: flood fill, tolerance, contiguous mode
+  - HandTool: panning, pan speed
+- Integration tests for tool system:
+  - Tool registration and loading
+  - State persistence
+  - Type safety
+  - Option validation
+
+**Testing Framework**: Vitest + Testing Library
+
+**Benefits:**
+- Prevent regressions when adding new features
+- Confidence when refactoring
+- Documentation through tests
+
+**Implementation Complexity**: High
+**User Impact**: None (developer experience)
+
+---
+
+### Phase 3 - Polish (MITTEL) 📝 NOT STARTED
+
+**Priority**: MEDIUM
+**Status**: 📝 PLANNED
+
+#### Phase 3.1: Dynamic Categories & Tags (4-5 hours)
+
+**Goal**: Flexible category system with tool search
+
+**Features to Implement:**
+- Extensible category system:
+  - Currently fixed categories: 'draw', 'view', 'edit'
+  - Make categories configurable
+  - Custom category definitions with icons and colors
+  - Multiple categories per tool
+- Tag system:
+  - Tools can have multiple tags
+  - Tag-based search and filtering
+  - Tag autocomplete in tool search
+- Tool search functionality:
+  - Search by name, description, tags
+  - Fuzzy search support
+  - Keyboard shortcuts for search (Cmd+K / Ctrl+K)
+  - Recent tools history
+  - Favorite tools
+- Enhanced toolbar:
+  - Category tabs or dropdown
+  - Search bar
+  - Filter by category/tag
+  - Sort options (alphabetical, most used, recent)
+
+**UI Mockup:**
+```
+[ Search Tools... (Cmd+K) ]
+-------------------
+Drawing Tools ▼
+  ✏️ Pencil (B)
+  🧹 Eraser (E)
+  🪣 Bucket (G)
+
+View Tools ▼
+  ✋ Hand (H)
+
+Recent: Pencil, Bucket, Hand
+Favorites: ⭐ Pencil, ⭐ Bucket
+```
+
+**Benefits:**
+- Easier tool discovery
+- Better organization with many tools
+- Personalized workflow
+
+**Implementation Complexity**: Medium
+**User Impact**: High (better UX as tool count grows)
+
+---
+
+#### Phase 3.2: Tool Composition (6-8 hours)
+
+**Goal**: Mixins for code reuse, tool variants
+
+**Features to Implement:**
+- Mixin system for common tool behaviors:
+  - `BrushableMixin` - Adds brush size support
+  - `ColorableMixin` - Adds primary/secondary color
+  - `SnapToGridMixin` - Adds grid snapping
+  - `PressureSensitiveMixin` - Adds pressure sensitivity
+  - `PatternableMixin` - Adds pattern fill support
+- Tool composition API:
+  ```typescript
+  class MyTool extends compose(BaseTool, BrushableMixin, ColorableMixin) {
+    // Automatically gets brush and color functionality
+  }
+  ```
+- Tool variants:
+  - Base tool + different option presets
+  - Examples:
+    - Pencil → Soft Brush (brush size 4, opacity 50%)
+    - Pencil → Hard Brush (brush size 1, opacity 100%)
+    - Bucket → Pattern Fill (with pattern option enabled)
+- Variant registration:
+  - Register variants without duplicating code
+  - Show variants in toolbar grouped under base tool
+  - Quick switch between variants
+
+**Benefits:**
+- Reduce code duplication
+- Easy creation of tool variations
+- Consistent behavior across tools
+
+**Implementation Complexity**: High
+**User Impact**: Medium (more tool options)
+
+---
+
+### Phase 4 - Nice to Have (NIEDRIG) 📝 NOT STARTED
+
+**Priority**: LOW
+**Status**: 📝 FUTURE
+
+#### Phase 4.1: Auto-Generated Documentation (4-6 hours)
+
+**Goal**: Generate tool docs from code, in-app help
+
+**Features to Implement:**
+- Documentation extraction:
+  - Parse JSDoc comments from tool implementations
+  - Extract options, shortcuts, capabilities
+  - Generate markdown documentation
+  - Create searchable docs database
+- In-app help system:
+  - Help panel showing current tool documentation
+  - Interactive tutorials for each tool
+  - Tips and tricks based on usage patterns
+  - Video tutorials (links to external resources)
+- Tool documentation viewer:
+  - Keyboard shortcut to open help (F1 or ?)
+  - Context-sensitive help (shows help for active tool)
+  - Search docs functionality
+  - Copy examples to clipboard
+- Auto-update documentation:
+  - Re-generate on build
+  - Deploy to static site (GitHub Pages)
+  - Version documentation with releases
+
+**Example Generated Docs:**
+```markdown
+# Pencil Tool (B)
+
+Draw freehand with primary or secondary color
+
+## Options
+- **Brush Size** (1-64): Size of the brush in pixels
+
+## Shortcuts
+- B: Activate tool
+- Left Click: Draw with primary color
+- Right Click: Draw with secondary color
+
+## Tips
+- Use right-click to draw with secondary color
+- Adjust brush size in tool options for larger strokes
+```
+
+**Benefits:**
+- Always up-to-date documentation
+- Easier onboarding for new users
+- Reduced support burden
+
+**Implementation Complexity**: Medium
+**User Impact**: Medium (better learning experience)
+
+---
+
+#### Phase 4.2: Performance Optimizations (3-5 hours)
+
+**Goal**: Lazy loading, performance monitoring
+
+**Features to Implement:**
+- Lazy loading tools:
+  - Load tools on-demand instead of all at once
+  - Split tool implementations into separate chunks
+  - Show loading state when tool is being loaded
+  - Preload likely-to-use tools in background
+- Performance monitoring:
+  - Track tool activation time
+  - Track option change performance
+  - Track state persistence time
+  - Monitor memory usage
+  - Alert on performance degradation
+- Performance dashboard:
+  - Show tool load times
+  - Show state manager performance
+  - Show renderer performance
+  - Identify bottlenecks
+- Optimizations:
+  - Memoize expensive tool operations
+  - Debounce state persistence
+  - Virtual scrolling for large tool lists
+  - Canvas rendering optimizations
+  - Worker thread for heavy computations
+
+**Metrics to Track:**
+- Tool activation time < 50ms
+- Option change update < 16ms (60 FPS)
+- State persistence < 100ms
+- Tool list render < 50ms
+
+**Benefits:**
+- Faster app startup
+- Smoother interactions
+- Better performance with many tools
+
+**Implementation Complexity**: Medium-High
+**User Impact**: Low-Medium (feels snappier)
+
+---
+
+## 🎯 Complete Roadmap Priority Summary
+
+| Phase | Priority | Status | Time Estimate | User Impact |
+|-------|----------|--------|---------------|-------------|
+| **Phase 1** - Foundation | CRITICAL | ✅ COMPLETE | ~20 hours | High |
+| Phase 1.1: Configuration | CRITICAL | ✅ COMPLETE | 6-8 hours | High |
+| Phase 1.2: State Management | CRITICAL | ✅ COMPLETE | 6-8 hours | High |
+| Phase 1.3: Type Safety | CRITICAL | ✅ COMPLETE | 4-5 hours | High |
+| **Phase 2** - Features | HIGH | ⏸️ DEFERRED | ~20 hours | Medium |
+| Phase 2.1: Lifecycle & Events | HIGH | 📝 NOT STARTED | 6-8 hours | Low |
+| Phase 2.2: Advanced Validation | HIGH | 📝 NOT STARTED | 5-6 hours | High |
+| Phase 2.3: Testing | HIGH | 📝 NOT STARTED | 8-10 hours | None |
+| **Phase 3** - Polish | MEDIUM | 📝 PLANNED | ~12 hours | Medium |
+| Phase 3.1: Categories & Search | MEDIUM | 📝 PLANNED | 4-5 hours | High |
+| Phase 3.2: Tool Composition | MEDIUM | 📝 PLANNED | 6-8 hours | Medium |
+| **Phase 4** - Nice to Have | LOW | 📝 FUTURE | ~10 hours | Low |
+| Phase 4.1: Auto-Docs | LOW | 📝 FUTURE | 4-6 hours | Medium |
+| Phase 4.2: Performance | LOW | 📝 FUTURE | 3-5 hours | Low-Medium |
+
+**Total Estimated Time**: ~62 hours
+**Completed**: ~20 hours (Phase 1)
+**Remaining**: ~42 hours (Phases 2-4)
+
+---
+
 ## 🎊 Current Session Summary
 
 **All Immediate Tasks Completed!**

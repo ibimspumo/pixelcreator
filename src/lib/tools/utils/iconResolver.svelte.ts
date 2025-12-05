@@ -18,7 +18,8 @@ import {
 	ZoomIn,
 	Square,
 	Circle,
-	Lasso
+	Lasso,
+	Minus
 } from '@lucide/svelte';
 
 /**
@@ -34,7 +35,8 @@ const iconMap: Record<IconName, Component> = {
 	ZoomIn,
 	Square,
 	Circle,
-	Lasso
+	Lasso,
+	Minus
 };
 
 /**

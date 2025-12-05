@@ -28,7 +28,8 @@ export type IconName =
 	| 'ZoomIn'
 	| 'Square'
 	| 'Circle'
-	| 'Lasso';
+	| 'Lasso'
+	| 'Minus';
 
 /**
  * Tool configuration
