@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Svelte 5** - Using new Runes API (`$state`, `$derived`, `$effect`)
 - **TypeScript** - Strict mode enabled
 - **Vite** - Build tool and dev server
-- **Lucide Svelte** - Icon library
+- **@lucide/svelte** - Icon library (Svelte 5 compatible, NOT lucide-svelte which is for Svelte 4)
 
 ## Development Commands
 
@@ -61,6 +61,62 @@ All stores use Svelte 5's new Runes API instead of traditional stores:
 **projectStore** (`src/lib/stores/projectStore.svelte.ts`)
 - Project metadata (name, dimensions, timestamps)
 - Project lifecycle (create, load, close)
+
+### Plugin-Based Tool System
+
+**inline.px** features a fully modular, plugin-style tool system where tools are self-contained and automatically registered.
+
+**Architecture** (`src/lib/tools/`)
+
+```
+tools/
+├── base/
+│   ├── BaseTool.ts              # Abstract base class all tools extend
+│   ├── ToolConfig.ts            # Tool configuration interfaces
+│   └── ToolContext.ts           # Runtime context passed to tools
+├── implementations/
+│   ├── PencilTool.ts           # ✅ Fully implemented
+│   ├── EraserTool.ts           # ✅ Fully implemented
+│   ├── BucketTool.ts           # ✅ Fully implemented (flood fill)
+│   ├── EyedropperTool.ts       # 🚧 Partial (needs colorStore integration)
+│   ├── MoveTool.ts             # 📝 Placeholder
+│   └── HandTool.ts             # 📝 Placeholder
+├── registry/
+│   ├── ToolRegistry.ts         # Central tool registry (singleton)
+│   └── ToolLoader.ts           # Auto-loads tools via glob imports
+└── utils/
+    └── iconResolver.svelte.ts  # Maps icon names to @lucide/svelte components
+```
+
+**Key Features**:
+
+- **Auto-registration**: Tools in `implementations/` are automatically discovered and loaded
+- **Self-contained**: Each tool defines its own config, behavior, and validation
+- **Dynamic UI**: Toolbar auto-generates from registered tools, grouped by category
+- **Keyboard shortcuts**: Tools define shortcuts that work globally
+- **Tool validation**: Tools can validate if they can be used in current context
+
+**Adding a New Tool**:
+
+1. Create `src/lib/tools/implementations/MyTool.ts`
+2. Extend `BaseTool` and implement methods
+3. Export singleton: `export default new MyTool()`
+4. Tool automatically appears in toolbar on next load!
+
+**Tool Lifecycle**:
+
+- `onActivate()` - Called when tool is selected
+- `onMouseDown/Move/Up()` - Mouse event handlers
+- `onClick()` - For non-drag tools (e.g., bucket fill)
+- `canUse()` - Validates if tool can be used
+- `onDeactivate()` - Called when tool is unselected
+
+**ToolContext** provides tools with:
+
+- Canvas state (width, height, layers, activeLayerId, zoom)
+- Color state (primaryColorIndex, secondaryColorIndex)
+- Helper methods (setPixel, getPixel, requestRedraw)
+- Renderer reference for advanced operations
 
 ### Color System
 
