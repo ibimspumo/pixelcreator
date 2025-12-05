@@ -114,7 +114,9 @@
 			renderer,
 			setPixel: (x, y, colorIndex) => canvasStore.setPixel(x, y, colorIndex),
 			getPixel: (x, y, layerId) => canvasStore.getPixel(x, y, layerId),
-			requestRedraw: () => renderCanvas()
+			requestRedraw: () => renderCanvas(),
+			setPrimaryColor: (colorIndex) => colorStore.setPrimaryColor(colorIndex),
+			setSecondaryColor: (colorIndex) => colorStore.setSecondaryColor(colorIndex)
 		};
 	}
 

@@ -64,4 +64,8 @@ export interface ToolContext {
 	getPixel: (x: number, y: number, layerId?: string) => number;
 	/** Request canvas redraw */
 	requestRedraw: () => void;
+	/** Set primary color index */
+	setPrimaryColor: (colorIndex: number) => void;
+	/** Set secondary color index */
+	setSecondaryColor: (colorIndex: number) => void;
 }

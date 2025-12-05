@@ -25,17 +25,19 @@ class EyedropperTool extends BaseTool {
 
 	onClick(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
 		const { x, y, button } = mouseContext;
-		const { getPixel } = toolContext;
+		const { getPixel, setPrimaryColor, setSecondaryColor } = toolContext;
 
 		// Get color at clicked position
 		const colorIndex = getPixel(x, y);
 
-		// TODO: Set this as primary or secondary color
-		// This requires access to colorStore, which we'll add to ToolContext
-		console.log(`Eyedropper: Sampled color index ${colorIndex} (button: ${button})`);
-
-		// For now, we'll need to emit an event or callback
-		// This will be implemented when we integrate with colorStore
+		// Set as primary or secondary color based on mouse button
+		if (button === 0) {
+			// Left click: set primary color
+			setPrimaryColor(colorIndex);
+		} else if (button === 2) {
+			// Right click: set secondary color
+			setSecondaryColor(colorIndex);
+		}
 
 		return true;
 	}
