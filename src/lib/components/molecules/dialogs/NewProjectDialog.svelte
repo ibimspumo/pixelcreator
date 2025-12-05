@@ -1,8 +1,38 @@
+<!--
+  @component NewProjectDialog
+
+  Modal dialog for creating a new pixel art project. Allows the user to specify
+  a project name and select from predefined canvas sizes (8x8 to 128x128).
+  Features a responsive size grid and backdrop blur overlay.
+
+  @example
+  ```svelte
+  <NewProjectDialog
+    onsubmit={(name, size) => createProject(name, size)}
+    oncancel={() => closeDialog()}
+  />
+  ```
+
+  @remarks
+  - Modal overlay with backdrop blur effect
+  - Project name defaults to "Untitled"
+  - Canvas size selection with visual grid (8, 16, 32, 64, 128)
+  - Size buttons show dimensions and total pixels
+  - Default size is 32x32
+  - Form validation ensures name is not empty
+  - Click overlay to cancel, click inside dialog to prevent close
+  - Accessible with autofocus on name input
+-->
 <script lang="ts">
 	import { PROJECT_SIZES, DEFAULT_PROJECT_SIZE, type ProjectSize } from '$lib/types/project.types';
 
+	/**
+	 * Props interface for NewProjectDialog component
+	 */
 	interface Props {
+		/** Callback when form is submitted with project name and size */
 		onsubmit: (name: string, size: ProjectSize) => void;
+		/** Callback when dialog is cancelled */
 		oncancel: () => void;
 	}
 
@@ -11,6 +41,9 @@
 	let projectName = $state('Untitled');
 	let selectedSize = $state<ProjectSize>(DEFAULT_PROJECT_SIZE);
 
+	/**
+	 * Handles form submission and validates input
+	 */
 	function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (projectName.trim()) {

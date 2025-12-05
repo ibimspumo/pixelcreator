@@ -1,3 +1,25 @@
+<!--
+  @component PixelGrid
+
+  The core interactive canvas component for pixel art drawing. Manages the HTML canvas element,
+  initializes the CanvasRenderer, and handles all mouse interactions for drawing pixels.
+  Integrates with canvasStore and colorStore for state management.
+
+  @example
+  ```svelte
+  <PixelGrid />
+  ```
+
+  @remarks
+  - Initializes CanvasRenderer with 32px pixel size and grid display
+  - Uses Svelte 5's $effect rune for reactive rendering when canvas state changes
+  - Left-click draws with primary color, right-click draws with secondary color
+  - Prevents context menu on right-click for seamless drawing
+  - Automatic cleanup on component destroy
+  - Drawing state managed with $state rune for click-and-drag functionality
+  - Crosshair cursor for precise pixel placement
+  - Checkerboard background for transparency visualization
+-->
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { canvasStore } from '$lib/stores/canvasStore.svelte';
@@ -9,17 +31,17 @@
 	let isDrawing = $state(false);
 
 	onMount(() => {
-		// Initialize renderer
+		// Initialize renderer with configuration
 		renderer = new CanvasRenderer(canvasElement, {
 			pixelSize: 32,
 			showGrid: true,
 			showPixelBorders: true
 		});
 
-		// Initial render
+		// Perform initial render
 		renderCanvas();
 
-		// Set up reactive rendering
+		// Set up reactive rendering using $effect rune
 		$effect(() => {
 			// This effect runs whenever canvas state changes
 			const { width, height, layers } = canvasStore;
@@ -31,32 +53,52 @@
 	});
 
 	onDestroy(() => {
+		// Clean up renderer resources
 		renderer?.destroy();
 	});
 
+	/**
+	 * Renders the current canvas state to the HTML canvas element
+	 */
 	function renderCanvas() {
 		if (!renderer) return;
 		renderer.render(canvasStore.width, canvasStore.height, canvasStore.layers);
 	}
 
+	/**
+	 * Handles mouse down event to start drawing
+	 */
 	function handleMouseDown(event: MouseEvent) {
 		isDrawing = true;
 		drawPixel(event);
 	}
 
+	/**
+	 * Handles mouse move event to continue drawing when mouse is down
+	 */
 	function handleMouseMove(event: MouseEvent) {
 		if (!isDrawing) return;
 		drawPixel(event);
 	}
 
+	/**
+	 * Handles mouse up event to stop drawing
+	 */
 	function handleMouseUp() {
 		isDrawing = false;
 	}
 
+	/**
+	 * Handles mouse leave event to stop drawing when cursor leaves canvas
+	 */
 	function handleMouseLeave() {
 		isDrawing = false;
 	}
 
+	/**
+	 * Draws a pixel at the mouse position with the appropriate color
+	 * @param event - Mouse event containing cursor position
+	 */
 	function drawPixel(event: MouseEvent) {
 		if (!renderer || !canvasElement) return;
 
@@ -74,6 +116,9 @@
 		renderCanvas();
 	}
 
+	/**
+	 * Prevents default context menu on right-click for seamless drawing
+	 */
 	function handleContextMenu(event: MouseEvent) {
 		event.preventDefault();
 		return false;

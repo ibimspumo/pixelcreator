@@ -1,8 +1,38 @@
+<!--
+  @component ImportDialog
+
+  Modal dialog for importing a pixel art project from a Base64 string.
+  Validates the Base64 format (WIDTHxHEIGHT:BASE64DATA) and displays
+  helpful error messages for invalid input.
+
+  @example
+  ```svelte
+  <ImportDialog
+    onsubmit={(name, width, height, pixels) => loadProject(name, width, height, pixels)}
+    oncancel={() => closeDialog()}
+  />
+  ```
+
+  @remarks
+  - Accepts Base64 strings in format: WIDTHxHEIGHT:BASE64DATA
+  - Project name defaults to "Imported Project"
+  - Textarea with monospace font for Base64 input
+  - Real-time validation with user-friendly error messages
+  - Shows format hint and example below textarea
+  - Autofocus on Base64 input field
+  - Backdrop blur overlay with click-to-close
+  - Delegates parsing to projectIO utility functions
+-->
 <script lang="ts">
 	import { importFromBase64 } from '$lib/utils/projectIO';
 
+	/**
+	 * Props interface for ImportDialog component
+	 */
 	interface Props {
+		/** Callback when import is successful with parsed project data */
 		onsubmit: (name: string, width: number, height: number, pixels: number[][]) => void;
+		/** Callback when dialog is cancelled */
 		oncancel: () => void;
 	}
 
@@ -12,6 +42,9 @@
 	let base64Input = $state('');
 	let errorMessage = $state<string | null>(null);
 
+	/**
+	 * Handles form submission, validates input, and parses Base64 string
+	 */
 	function handleSubmit(e: Event) {
 		e.preventDefault();
 		errorMessage = null;

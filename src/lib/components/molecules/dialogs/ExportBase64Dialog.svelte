@@ -1,9 +1,41 @@
+<!--
+  @component ExportBase64Dialog
+
+  Modal dialog that displays the exported Base64 string of the current project.
+  Provides a readonly textarea with the full Base64 string and a copy-to-clipboard
+  button with visual feedback.
+
+  @example
+  ```svelte
+  <ExportBase64Dialog
+    base64String="8x8:AAABBBCCCDDD..."
+    projectName="My Pixel Art"
+    onclose={() => closeDialog()}
+  />
+  ```
+
+  @remarks
+  - Readonly textarea with monospace font for Base64 display
+  - Character count display for reference
+  - Copy to clipboard button with success feedback (2 second duration)
+  - Auto-selects all text when textarea is focused
+  - Helpful hint text for manual copying
+  - Displays project name in subtitle
+  - Backdrop blur overlay
+  - Clipboard API with fallback alert on failure
+-->
 <script lang="ts">
 	import { Copy, Check } from '@lucide/svelte';
 
+	/**
+	 * Props interface for ExportBase64Dialog component
+	 */
 	interface Props {
+		/** The Base64-encoded project string to display */
 		base64String: string;
+		/** Name of the project being exported */
 		projectName: string;
+		/** Callback when dialog is closed */
 		onclose: () => void;
 	}
 
@@ -11,6 +43,9 @@
 
 	let copied = $state(false);
 
+	/**
+	 * Copies the Base64 string to the clipboard and shows success feedback
+	 */
 	async function handleCopy() {
 		try {
 			await navigator.clipboard.writeText(base64String);
@@ -24,6 +59,9 @@
 		}
 	}
 
+	/**
+	 * Selects all text in the textarea when focused for easy copying
+	 */
 	function handleSelectAll(e: Event) {
 		const textarea = e.target as HTMLTextAreaElement;
 		textarea.select();

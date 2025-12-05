@@ -1,23 +1,78 @@
+<!--
+  @component LayerItem
+
+  A complex layer management component that displays a layer's thumbnail, name, and controls.
+  Supports inline name editing, drag & drop reordering, and various layer operations.
+  Used within the LayersPanel to represent individual layers in the canvas.
+
+  @example
+  ```svelte
+  <LayerItem
+    {layer}
+    {canvasWidth}
+    {canvasHeight}
+    isActive={activeLayerId === layer.id}
+    canMoveUp={index < layers.length - 1}
+    canMoveDown={index > 0}
+    onSelect={() => selectLayer(layer.id)}
+    onToggleVisibility={() => toggleVisibility(layer.id)}
+    onToggleLock={() => toggleLock(layer.id)}
+    onDuplicate={() => duplicateLayer(layer.id)}
+    onMoveUp={() => moveLayerUp(layer.id)}
+    onMoveDown={() => moveLayerDown(layer.id)}
+    onRename={(newName) => renameLayer(layer.id, newName)}
+    onDragStart={handleDragStart}
+    onDrop={handleDrop}
+  />
+  ```
+
+  @remarks
+  - Double-click layer name to enter inline editing mode
+  - Enter confirms, Escape cancels name editing
+  - Drag handle allows layer reordering with visual feedback
+  - Active layer displays with accent border and shadow
+  - Visibility, lock, and duplicate actions available
+  - Up/Down buttons for layer reordering (disabled at boundaries)
+  - Status badges show hidden/locked state
+  - Displays layer dimensions and thumbnail preview
+-->
 <script lang="ts">
 	import LayerThumbnail from './LayerThumbnail.svelte';
 	import IconButton from '$lib/components/atoms/buttons/IconButton.svelte';
 	import { Eye, EyeOff, Lock, Unlock, Copy, ChevronUp, ChevronDown, GripVertical } from '@lucide/svelte';
 	import type { Layer } from '$lib/types/canvas.types';
 
+	/**
+	 * Props interface for LayerItem component
+	 */
 	interface Props {
+		/** Layer data object */
 		layer: Layer;
+		/** Canvas width for dimension display */
 		canvasWidth: number;
+		/** Canvas height for dimension display */
 		canvasHeight: number;
+		/** Whether this layer is currently active/selected */
 		isActive: boolean;
+		/** Whether the layer can be moved up in the stack */
 		canMoveUp: boolean;
+		/** Whether the layer can be moved down in the stack */
 		canMoveDown: boolean;
+		/** Callback when layer is selected */
 		onSelect: () => void;
+		/** Callback to toggle layer visibility */
 		onToggleVisibility: () => void;
+		/** Callback to toggle layer lock status */
 		onToggleLock: () => void;
+		/** Callback to duplicate this layer */
 		onDuplicate: () => void;
+		/** Callback to move layer up in stack */
 		onMoveUp: () => void;
+		/** Callback to move layer down in stack */
 		onMoveDown: () => void;
+		/** Callback when layer is renamed */
 		onRename: (newName: string) => void;
+		/** Drag and drop event handlers */
 		onDragStart?: (e: DragEvent) => void;
 		onDragOver?: (e: DragEvent) => void;
 		onDrop?: (e: DragEvent) => void;
@@ -44,15 +99,22 @@
 		onDragEnd
 	}: Props = $props();
 
+	// Local state for editing and dragging
 	let isEditing = $state(false);
 	let editName = $state(layer.name);
 	let isDragging = $state(false);
 
+	/**
+	 * Enters inline name editing mode
+	 */
 	function startEditing() {
 		isEditing = true;
 		editName = layer.name;
 	}
 
+	/**
+	 * Finishes editing and saves the new name if changed
+	 */
 	function finishEditing() {
 		if (editName.trim() && editName !== layer.name) {
 			onRename(editName.trim());
@@ -60,6 +122,10 @@
 		isEditing = false;
 	}
 
+	/**
+	 * Handles keyboard shortcuts during name editing
+	 * @param e - Keyboard event
+	 */
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter') {
 			finishEditing();
@@ -69,6 +135,9 @@
 		}
 	}
 
+	/**
+	 * Handles drag start for layer reordering
+	 */
 	function handleDragStart(e: DragEvent) {
 		isDragging = true;
 		if (e.dataTransfer) {
@@ -77,11 +146,17 @@
 		onDragStart?.(e);
 	}
 
+	/**
+	 * Handles drag end to reset visual state
+	 */
 	function handleDragEnd(e: DragEvent) {
 		isDragging = false;
 		onDragEnd?.(e);
 	}
 
+	/**
+	 * Handles drag over to allow dropping
+	 */
 	function handleDragOver(e: DragEvent) {
 		e.preventDefault();
 		if (e.dataTransfer) {
@@ -90,6 +165,9 @@
 		onDragOver?.(e);
 	}
 
+	/**
+	 * Handles drop event for layer reordering
+	 */
 	function handleDrop(e: DragEvent) {
 		e.preventDefault();
 		onDrop?.(e);
