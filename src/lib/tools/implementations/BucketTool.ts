@@ -6,11 +6,12 @@
  */
 
 import { BaseTool } from '../base/BaseTool';
-import type { ToolConfig } from '../base/ToolConfig';
+import type { ToolConfigExtended } from '../base/ToolMetadata';
+import { commonToolOptions } from '../base/ToolOptions';
 import type { ToolContext, MouseEventContext } from '../base/ToolContext';
 
 class BucketTool extends BaseTool {
-	public readonly config: ToolConfig = {
+	public readonly config: ToolConfigExtended = {
 		id: 'bucket',
 		name: 'Paint Bucket',
 		description: 'Fill contiguous area with color',
@@ -20,12 +21,21 @@ class BucketTool extends BaseTool {
 		cursor: 'crosshair',
 		supportsDrag: false,
 		worksOnLockedLayers: false,
-		order: 3
+		order: 3,
+		version: '1.1.0',
+		author: 'inline.px',
+		license: 'MIT',
+		tags: ['fill', 'paint', 'flood-fill'],
+		options: [commonToolOptions.tolerance, commonToolOptions.contiguous]
 	};
 
 	onClick(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
 		const { x, y, button } = mouseContext;
-		const { canvas, colors, setPixel, getPixel, requestRedraw } = toolContext;
+		const { canvas, colors, setPixel, getPixel, requestRedraw, state } = toolContext;
+
+		// Get tool options
+		const tolerance = state.getToolOption<number>(this.config.id, 'tolerance') ?? 0;
+		const contiguous = state.getToolOption<boolean>(this.config.id, 'contiguous') ?? true;
 
 		// Use primary color for left click, secondary for right click
 		const fillColorIndex = button === 2 ? colors.secondaryColorIndex : colors.primaryColorIndex;
@@ -39,20 +49,25 @@ class BucketTool extends BaseTool {
 		}
 
 		// Perform flood fill
-		this.floodFill(x, y, targetColorIndex, fillColorIndex, canvas, setPixel, getPixel);
+		if (contiguous) {
+			this.floodFill(x, y, targetColorIndex, fillColorIndex, tolerance, canvas, setPixel, getPixel);
+		} else {
+			this.globalFill(targetColorIndex, fillColorIndex, tolerance, canvas, setPixel, getPixel);
+		}
 		requestRedraw();
 
 		return true;
 	}
 
 	/**
-	 * Flood fill algorithm using stack-based approach
+	 * Flood fill algorithm using stack-based approach (contiguous fill)
 	 */
 	private floodFill(
 		startX: number,
 		startY: number,
 		targetColor: number,
 		fillColor: number,
+		tolerance: number,
 		canvas: { width: number; height: number },
 		setPixel: (x: number, y: number, colorIndex: number) => void,
 		getPixel: (x: number, y: number) => number
@@ -72,8 +87,9 @@ class BucketTool extends BaseTool {
 			if (visited.has(key)) continue;
 			visited.add(key);
 
-			// Skip if this pixel is not the target color
-			if (getPixel(x, y) !== targetColor) continue;
+			// Check if this pixel matches the target color (with tolerance)
+			const currentColor = getPixel(x, y);
+			if (!this.colorMatches(currentColor, targetColor, tolerance)) continue;
 
 			// Fill this pixel
 			setPixel(x, y, fillColor);
@@ -84,6 +100,40 @@ class BucketTool extends BaseTool {
 			stack.push({ x, y: y + 1 });
 			stack.push({ x, y: y - 1 });
 		}
+	}
+
+	/**
+	 * Global fill - fills all matching pixels regardless of connectivity
+	 */
+	private globalFill(
+		targetColor: number,
+		fillColor: number,
+		tolerance: number,
+		canvas: { width: number; height: number },
+		setPixel: (x: number, y: number, colorIndex: number) => void,
+		getPixel: (x: number, y: number) => number
+	): void {
+		const { width, height } = canvas;
+
+		// Iterate through all pixels and fill matching ones
+		for (let y = 0; y < height; y++) {
+			for (let x = 0; x < width; x++) {
+				const currentColor = getPixel(x, y);
+				if (this.colorMatches(currentColor, targetColor, tolerance)) {
+					setPixel(x, y, fillColor);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Check if two color indices match within tolerance
+	 * For indexed colors, tolerance is a simple numeric difference
+	 */
+	private colorMatches(color1: number, color2: number, tolerance: number): boolean {
+		// For now, with indexed colors, we use simple index difference
+		// In the future, this could be enhanced to compare actual RGB values
+		return Math.abs(color1 - color2) <= tolerance / 10;
 	}
 
 	canUse(toolContext: ToolContext): { valid: boolean; reason?: string } {

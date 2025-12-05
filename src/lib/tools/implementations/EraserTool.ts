@@ -6,11 +6,12 @@
  */
 
 import { BaseTool } from '../base/BaseTool';
-import type { ToolConfig } from '../base/ToolConfig';
+import type { ToolConfigExtended } from '../base/ToolMetadata';
+import { commonToolOptions } from '../base/ToolOptions';
 import type { ToolContext, MouseEventContext } from '../base/ToolContext';
 
 class EraserTool extends BaseTool {
-	public readonly config: ToolConfig = {
+	public readonly config: ToolConfigExtended = {
 		id: 'eraser',
 		name: 'Eraser',
 		description: 'Erase pixels to transparent',
@@ -20,7 +21,12 @@ class EraserTool extends BaseTool {
 		cursor: 'crosshair',
 		supportsDrag: true,
 		worksOnLockedLayers: false,
-		order: 2
+		order: 2,
+		version: '1.1.0',
+		author: 'inline.px',
+		license: 'MIT',
+		tags: ['drawing', 'erase', 'transparent'],
+		options: [commonToolOptions.brushSize]
 	};
 
 	onMouseDown(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
@@ -32,16 +38,33 @@ class EraserTool extends BaseTool {
 	}
 
 	/**
-	 * Erase a pixel at the mouse position
+	 * Erase pixels at the mouse position
+	 * Respects brush size option for erasing multiple pixels
 	 */
 	private erasePixel(mouseContext: MouseEventContext, toolContext: ToolContext): boolean {
 		const { x, y } = mouseContext;
-		const { setPixel, requestRedraw } = toolContext;
+		const { setPixel, requestRedraw, canvas, state } = toolContext;
 
-		// Always set to transparent (index 0)
-		setPixel(x, y, 0);
+		// Get brush size from tool state (defaults to 1)
+		const brushSize = state.getToolOption<number>(this.config.id, 'brushSize') ?? 1;
+
+		// Calculate brush radius (brush size 1 = single pixel, size 2 = 2x2, etc.)
+		const radius = Math.floor(brushSize / 2);
+
+		// Erase pixels in brush area
+		for (let dy = -radius; dy < brushSize - radius; dy++) {
+			for (let dx = -radius; dx < brushSize - radius; dx++) {
+				const px = x + dx;
+				const py = y + dy;
+
+				// Check bounds
+				if (px >= 0 && px < canvas.width && py >= 0 && py < canvas.height) {
+					setPixel(px, py, 0); // Set to transparent (index 0)
+				}
+			}
+		}
+
 		requestRedraw();
-
 		return true;
 	}
 

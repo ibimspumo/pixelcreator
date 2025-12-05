@@ -32,7 +32,7 @@ export interface ToolState {
  *
  * Manages state for all tools with automatic persistence to localStorage
  */
-class ToolStateManager {
+export class ToolStateManager {
 	private states = $state(new Map<string, ToolState>());
 	private storageKey = 'inline-px:tool-states';
 	private isInitialized = false;
