@@ -1,3 +1,27 @@
+<!--
+  @component EditorLayout
+
+  Main application layout template that assembles all organisms into a cohesive
+  pixel art editor interface. Features a three-column layout with MenuBar at top,
+  Toolbar on left, Canvas in center, and Sidebar panels on right.
+
+  @example
+  ```svelte
+  <EditorLayout />
+  ```
+
+  @remarks
+  - Full viewport layout (100vw × 100vh) with no scroll
+  - Top: MenuBar with File menu and project name
+  - Left: Fixed-width Toolbar (52px) with tool icons
+  - Center: Flexible Canvas area with info bar
+  - Right: Fixed-width Sidebar (280px) with three panels
+  - Sidebar panels: ToolPropertiesPanel, ColorPanel, LayersPanel
+  - Sidebar is scrollable, panels stack vertically
+  - Last sidebar panel (Layers) is flexible height
+  - Uses CSS custom properties for dimensions and colors
+  - Flex-based responsive layout
+-->
 <script lang="ts">
 	import MenuBar from '$lib/components/organisms/editor/MenuBar.svelte';
 	import Toolbar from '$lib/components/organisms/editor/Toolbar.svelte';
