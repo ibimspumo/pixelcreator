@@ -42,8 +42,6 @@
 		// Get tools grouped by category
 		toolsByCategory = toolRegistry.getToolsGroupedByCategory();
 		toolsLoaded = true;
-
-		console.log('Toolbar: Loaded tools by category:', toolsByCategory);
 	});
 
 	/**
