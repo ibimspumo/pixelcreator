@@ -21,6 +21,7 @@
   - Last sidebar panel (Layers) is flexible height
   - Uses CSS custom properties for dimensions and colors
   - Flex-based responsive layout
+  - Keyboard shortcut: F1 to open help panel
 -->
 <script lang="ts">
 	import MenuBar from '$lib/components/organisms/editor/MenuBar.svelte';
@@ -30,10 +31,34 @@
 	import ToolPropertiesPanel from '$lib/components/organisms/panels/ToolPropertiesPanel.svelte';
 	import ColorPanel from '$lib/components/organisms/panels/ColorPanel.svelte';
 	import LayersPanel from '$lib/components/organisms/panels/LayersPanel.svelte';
+	import HelpPanel from '$lib/components/organisms/help/HelpPanel.svelte';
+	import { canvasStore } from '$lib/stores/canvasStore.svelte';
 
 	// Toggle between old and new toolbar for testing
 	const useEnhancedToolbar = true;
+
+	// Help panel state
+	let showHelp = $state(false);
+
+	/**
+	 * Handle keyboard shortcuts for help panel
+	 */
+	function handleKeyDown(event: KeyboardEvent) {
+		// F1 to toggle help
+		if (event.key === 'F1') {
+			event.preventDefault();
+			showHelp = !showHelp;
+		}
+
+		// Escape to close help
+		if (event.key === 'Escape' && showHelp) {
+			event.preventDefault();
+			showHelp = false;
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleKeyDown} />
 
 <div class="editor-layout">
 	<MenuBar />
@@ -62,6 +87,13 @@
 		</div>
 	</div>
 </div>
+
+<!-- Help Panel (opened with F1) -->
+<HelpPanel
+	isOpen={showHelp}
+	activeTool={canvasStore.activeTool}
+	onclose={() => (showHelp = false)}
+/>
 
 <style>
 	.editor-layout {

@@ -1,0 +1,179 @@
+[
+  {
+    "id": "bucket",
+    "name": "Paint Bucket",
+    "description": "Fill contiguous area with color",
+    "category": "draw",
+    "shortcut": "G",
+    "version": "1.2.0",
+    "author": "inline.px",
+    "tags": [
+      "fill",
+      "paint",
+      "flood-fill",
+      "pattern"
+    ]
+  },
+  {
+    "id": "circle",
+    "name": "Circle",
+    "description": "Draw circles and ellipses with fill or outline mode",
+    "category": "draw",
+    "shortcut": "C",
+    "version": "1.1.0",
+    "author": "inline.px",
+    "tags": [
+      "shape",
+      "circle",
+      "ellipse",
+      "drawing",
+      "geometry"
+    ],
+    "documentation": {
+      "description": "Draw circular and elliptical shapes on the canvas with precise control over fill and outline.",
+      "usage": "Click and drag to define the circle. Enable ",
+      "tips": [
+        "Toggle Filled option to switch between solid and outline circles",
+        "Adjust line width for thicker outlines",
+        "Use Perfect Pixels to constrain to perfect circles",
+        "Use left-click for primary color and right-click for secondary color"
+      ],
+      "relatedTools": [
+        "rectangle",
+        "line",
+        "pencil"
+      ]
+    }
+  },
+  {
+    "id": "eraser",
+    "name": "Eraser",
+    "description": "Erase pixels to transparent",
+    "category": "draw",
+    "shortcut": "E",
+    "version": "1.2.0",
+    "author": "inline.px",
+    "tags": [
+      "drawing",
+      "erase",
+      "transparent"
+    ]
+  },
+  {
+    "id": "eyedropper",
+    "name": "Eyedropper",
+    "description": "Sample color from canvas",
+    "category": "draw",
+    "shortcut": "I"
+  },
+  {
+    "id": "hand",
+    "name": "Hand",
+    "description": "Pan the canvas view",
+    "category": "view",
+    "shortcut": "H",
+    "version": "1.0.0",
+    "author": "inline.px",
+    "tags": [
+      "navigation",
+      "pan",
+      "view"
+    ]
+  },
+  {
+    "id": "line",
+    "name": "Line",
+    "description": "Draw straight lines with configurable width",
+    "category": "draw",
+    "shortcut": "L",
+    "version": "1.0.0",
+    "author": "inline.px",
+    "tags": [
+      "shape",
+      "line",
+      "drawing",
+      "geometry"
+    ],
+    "documentation": {
+      "description": "Draw perfectly straight lines on the canvas with configurable width.",
+      "usage": "Click and drag to define the line. Enable ",
+      "tips": [
+        "Adjust line width for thicker lines",
+        "Use Perfect Angles to draw horizontal",
+        "vertical",
+        "or diagonal lines",
+        "Use left-click for primary color and right-click for secondary color"
+      ],
+      "relatedTools": [
+        "rectangle",
+        "circle",
+        "pencil"
+      ]
+    }
+  },
+  {
+    "id": "move",
+    "name": "Move",
+    "description": "Move selected content or layers",
+    "category": "edit",
+    "shortcut": "V"
+  },
+  {
+    "id": "pencil",
+    "name": "Pencil",
+    "description": "Draw freehand with primary or secondary color",
+    "category": "draw",
+    "shortcut": "B",
+    "version": "1.2.0",
+    "author": "inline.px",
+    "tags": [
+      "drawing",
+      "basic",
+      "pixel",
+      "freehand"
+    ],
+    "documentation": {
+      "description": "The Pencil tool allows you to draw individual pixels on the canvas with precise control.",
+      "usage": "Click to draw a single pixel, or click and drag to draw continuously. Use left-click for primary color and right-click for secondary color.",
+      "tips": [
+        "Hold Shift while dragging to draw straight lines (coming soon)",
+        "Use right-click to draw with secondary color",
+        "Adjust brush size in tool options for larger strokes"
+      ],
+      "relatedTools": [
+        "eraser",
+        "bucket"
+      ]
+    }
+  },
+  {
+    "id": "rectangle",
+    "name": "Rectangle",
+    "description": "Draw rectangles with fill or outline mode",
+    "category": "draw",
+    "shortcut": "U",
+    "version": "1.2.0",
+    "author": "inline.px",
+    "tags": [
+      "shape",
+      "rectangle",
+      "drawing",
+      "geometry"
+    ],
+    "documentation": {
+      "description": "Draw rectangular shapes on the canvas with precise control over fill and outline.",
+      "usage": "Click and drag to define the rectangle. Hold Shift to constrain to a perfect square.",
+      "tips": [
+        "Toggle Filled option to switch between solid and outline rectangles",
+        "Adjust line width for thicker outlines",
+        "Use Perfect Pixels to constrain to square shapes",
+        "Use left-click for primary color and right-click for secondary color"
+      ],
+      "relatedTools": [
+        "circle",
+        "line",
+        "pencil"
+      ]
+    }
+  }
+]
